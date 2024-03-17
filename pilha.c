@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int inicializa_pilha(pilha_t *pilha) {
+    pilha = NULL;
+    return 0;
+}
+
 int tamanho_pilha(pilha_t *pilha) {
     // Pilha vazia
     if (pilha == NULL) {

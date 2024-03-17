@@ -12,6 +12,9 @@ typedef struct pilha_t
    struct pilha_t *prox;
 } pilha_t ;
 
+// Inicializa pilha
+int inicializa_pilha(pilha_t *pilha);
+
 // Retorna o tamanho da pilha
 int tamanho_pilha(pilha_t *pilha);
 

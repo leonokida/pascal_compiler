@@ -1,7 +1,7 @@
 #ifndef __TAB_SIMBOLOS__
 #define __TAB_SIMBOLOS__
 
-#include <pilha.h>
+#include "pilha.h"
 
 // Categoria do símbolo
 typedef enum categoria_simbolo {

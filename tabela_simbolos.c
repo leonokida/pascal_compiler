@@ -71,7 +71,7 @@ atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passag
     return novo_atr;
 }
 
-void *imprime_simbolo(void *simbolo) {
+void imprime_simbolo(void *simbolo) {
     entrada_tabela_simbolos *simb = (entrada_tabela_simbolos *)simbolo;
     printf("###########");
     switch (simb->cat)

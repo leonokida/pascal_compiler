@@ -64,10 +64,10 @@ typedef struct atributos_param_formal
 pilha_t *inicializa_tabela_simbolos();
 
 // Insere símbolos na tabela
-int insere_simbolo(pilha_t *tabela_simbolos, entrada_tabela_simbolos * simbolo);
+int insere_simbolo(pilha_t **tabela_simbolos, entrada_tabela_simbolos * simbolo);
 
 // Retira os n últimos símbolos inseridos na tabela
-void retira_simbolos(pilha_t *tabela_simbolos, int n);
+void retira_simbolos(pilha_t **tabela_simbolos, int n);
 
 // Busca e retorna o símbolo com o identificador buscado; retorna Null se não encontra
 entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador);

@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int inicializa_pilha(pilha_t *pilha) {
-    pilha = NULL;
+int inicializa_pilha(pilha_t **pilha) {
+    *pilha = NULL;
     return 0;
 }
 
@@ -24,7 +24,6 @@ int tamanho_pilha(pilha_t *pilha) {
 }
 
 void imprime_pilha(pilha_t *pilha, void (*imprime_func)(void*)) {
-    printf("#####\n");
     // Pilha vazia
     if (pilha == NULL) {
         printf("Pilha vazia.\n");
@@ -39,7 +38,6 @@ void imprime_pilha(pilha_t *pilha, void (*imprime_func)(void*)) {
             itr = itr->prox;
         }
     }
-    printf("#####\n");
 }
 
 int insere_topo(pilha_t **pilha, void *elem) {

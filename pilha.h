@@ -1,9 +1,7 @@
 #ifndef __QUEUE__
 #define __QUEUE__
 
-#ifndef NULL
-#define NULL ((void *) 0)
-#endif
+#include <stdlib.h>
 
 // Pilha genérica para qualquer tipo de dado
 typedef struct pilha_t
@@ -13,7 +11,7 @@ typedef struct pilha_t
 } pilha_t ;
 
 // Inicializa pilha
-int inicializa_pilha(pilha_t *pilha);
+int inicializa_pilha(pilha_t **pilha);
 
 // Retorna o tamanho da pilha
 int tamanho_pilha(pilha_t *pilha);

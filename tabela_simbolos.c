@@ -5,17 +5,17 @@
 
 pilha_t *inicializa_tabela_simbolos() {
     pilha_t *tabela_simbolos;
-    inicializa_pilha(tabela_simbolos);
+    inicializa_pilha(&tabela_simbolos);
     return tabela_simbolos;
 }
 
-int insere_simbolo(pilha_t *tabela_simbolos, entrada_tabela_simbolos * simbolo) {
-    return insere_topo(&tabela_simbolos, simbolo);
+int insere_simbolo(pilha_t **tabela_simbolos, entrada_tabela_simbolos * simbolo) {
+    return insere_topo(tabela_simbolos, simbolo);
 }
 
-void retira_simbolos(pilha_t *tabela_simbolos, int n) {
+void retira_simbolos(pilha_t **tabela_simbolos, int n) {
     for (int i = 0; i < n; i++)
-        remove_topo(&tabela_simbolos);
+        remove_topo(tabela_simbolos);
 }
 
 entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador) {
@@ -73,7 +73,7 @@ atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passag
 
 void imprime_simbolo(void *simbolo) {
     entrada_tabela_simbolos *simb = (entrada_tabela_simbolos *)simbolo;
-    printf("###########");
+    printf("###########\n");
     switch (simb->cat)
     {
     case var_simples:
@@ -93,7 +93,7 @@ void imprime_simbolo(void *simbolo) {
         break;
     }
     printf("# Identificador: %s\n", simb->id);
-    printf("###########");
+    printf("###########\n");
 }
 
 void imprime_tabela_simbolos(pilha_t *tabela_simbolos) {

@@ -205,13 +205,13 @@ not { simbolo = simb_not;
 \- { simbolo = simb_subtrai;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("subtrai ");
-          return subtrai;
+          return SUBTRAI;
  }
 
 div { simbolo = simb_div;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("div ");
-          return div;
+          return DIV;
  }
 
 \* { simbolo = simb_mul;

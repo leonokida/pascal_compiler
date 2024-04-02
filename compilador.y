@@ -11,7 +11,7 @@
 #include "compilador.h"
 
 int num_vars;
-pilha_t *tabela_simbolos
+pilha_t *tabela_simbolosgit 
 
 %}
 

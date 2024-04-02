@@ -11,6 +11,7 @@
 #include "compilador.h"
 
 int num_vars;
+pilha_t *tabela_simbolos
 
 %}
 
@@ -58,15 +59,23 @@ declara_vars: declara_vars declara_var
             | declara_var
 ;
 
-declara_var : { }
+declara_var : { num_vars = 0; }
               lista_id_var DOIS_PONTOS
               tipo
-              { /* AMEM */
+              { 
+                  /* Aloca memória pras variáveis */
+                  sprintf(comando, "AMEM %d", num_vars);
+                  geraCodigo(NULL, comando);
               }
               PONTO_E_VIRGULA
 ;
 
-tipo        : IDENT
+tipo        : INTEGER {
+                  atualizaTipoVar(&tabela_simbolos, inteiro, num_vars);
+               }
+            | BOOLEAN {
+                  atualizaTipoVar(&tabela_simbolos, booleano, num_vars);
+               }
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT

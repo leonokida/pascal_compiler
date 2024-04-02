@@ -87,6 +87,8 @@ atributos_funcao *cria_atributos_funcao(char *rotulo, int num_params, tipo tipo_
 // Cria a struct de atributos de parâmetro formal para inserir na struct do símbolo
 atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass, int deslocamento);
 
+void atualiza_tipo(pilha_t **tabela_simbolos, tipo t, int n);
+
 // Função para imprimir a tabela de símbolos
 void imprime_tabela_simbolos(pilha_t *tabela_simbolos);
 

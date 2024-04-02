@@ -29,6 +29,35 @@ entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador) {
     return NULL;
 }
 
+void atualiza_tipo(pilha_t **tabela_simbolos, tipo t, int n) {
+    pilha_t *iter = *tabela_simbolos;
+    int i = 0;
+    while ((iter != NULL) || (i<n)) {
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
+        atributos_var_simples * atributo_atual = (atributos_var_simples *) simbolo_atual->atributos;
+        atributo_atual->tipo_var = t;
+        iter = iter->prox;
+        i++;
+    }
+    return NULL;
+}
+
+void remover_tipo_lexico(pilha_t **tabela_simbolos, int nL) {
+    if(tabela_simbolos == NULL) 
+        return;
+    pilha_t *iter = *tabela_simbolos;
+    while (iter != NULL) {
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
+        if (simbolo_atual->nivel == nL){
+            iter = iter->prox;
+            remove_topo(tabela_simbolos);
+        }
+        else    
+            return;
+    }
+
+}
+
 entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, int nivel, char *id, void *atributos) {
     entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
     novo_simb->cat = cat;

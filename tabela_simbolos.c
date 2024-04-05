@@ -39,7 +39,6 @@ void atualiza_tipo(pilha_t **tabela_simbolos, tipo t, int n) {
         iter = iter->prox;
         i++;
     }
-    return NULL;
 }
 
 void remover_tipo_lexico(pilha_t **tabela_simbolos, int nL) {

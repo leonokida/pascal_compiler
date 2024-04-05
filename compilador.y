@@ -12,6 +12,8 @@
 
 int num_vars;
 pilha_t *tabela_simbolosgit 
+pilha_t pilha_rotulos;
+int rotulo_print = 0;
 
 %}
 
@@ -91,8 +93,49 @@ lista_idents: lista_idents VIRGULA IDENT
 comando_composto: T_BEGIN comandos T_END
 
 comandos:
+         | comando PONTO_E_VIRGULA comandos
+         | comando
 ;
 
+comando: NUMERO DOIS_PONTOS comando_sem_rotulo
+         | comando_sem_rotulo
+
+comando_sem_rotulo:
+         | comando_repetitivo
+                  
+;
+
+comando_repetitivo:
+	WHILE
+	{
+		char *WhileInicio = cria_rotulo(rotulo_print);
+		rotulo_print++;
+		char *WhileFim = cria_rotulo(rotulo_print);
+		rotulo_print++;
+
+		insere_topo(&pilha_rotulos, WhileInicio);
+		insere_topo(&pilha_rotulos, WhileFim);
+		geraCodigo(pega_rotulo(&pilha_rotulos, 2), "NADA");
+	}
+	expressao DO
+	{
+		char dsvf[100];
+		sprintf(dsvf, "DSVF %s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(NULL, dsvf);
+	}
+	comando_composto
+	{
+		char dsvs[100];
+		sprintf(dsvs, "DSVS %s", pega_rotulo(&pilha_rotulos, 2));
+		geraCodigo(NULL, dsvs);
+
+		char rot[100];
+		sprintf(rot, "%s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(rot, "NADA");
+
+		remove_topo(&pilha_rotulos, 2);
+	}
+;
 
 %%
 

@@ -27,6 +27,21 @@ typedef enum simbolos {
   simb_real, simb_char, simb_boolean
 } simbolos;
 
+typedef enum operacoes {
+    soma,
+    subt,
+    div,
+    mult,
+    and,
+    or,
+    not,
+    menor,
+    maior,
+    igual,
+    diferente,
+    menor_ou_igual,
+    maior_ou_igual
+} operacoes;
 
 
 /* -------------------------------------------------------------------
@@ -45,5 +60,8 @@ extern int nl;
  * ------------------------------------------------------------------- */
 
 void geraCodigo (char*, char*);
+int imprimeErro(char *erro);
+char *gera_operacao_mepa(operacoes op);
+
 int yylex();
 void yyerror(const char *s);

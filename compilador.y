@@ -10,8 +10,25 @@
 #include <string.h>
 #include "compilador.h"
 
+#include "pilha.h"
+#include "tabela_simbolos.h"
+#include "desvios.h"
+
 int num_vars;
-pilha_t *tabela_simbolosgit 
+int num_vars_bloco;
+pilha_t *num_vars_pilha;
+
+int nivel_lex = 0;
+int rotulo_print = 0;
+int desloc;
+
+pilha_t *tab_simbolos;
+pilha_t *pilha_rotulos;
+pilha_t *operacoes_pilha;
+pilha_t *expressoes_pilha;
+
+char ident[50];
+char comando[50];
 
 %}
 
@@ -24,8 +41,15 @@ pilha_t *tabela_simbolosgit
 %token SUBTRAI DIV MUL MOD INTEGER LONGINT REAL CHAR 
 %token BOOLEAN NUMERO 
 
+/* Para funcionar o IF THEN ELSE
+   Precedências são crescentes, logo "lower_than_else" < "else" */
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
+
 %%
 
+/* regra 1*/
 programa    :{
              geraCodigo (NULL, "INPP");
              }
@@ -36,22 +60,50 @@ programa    :{
              }
 ;
 
-bloco       :
-              parte_declara_vars
-              {
-              }
+/* regra 2 */
+bloco       :{
+               num_vars_bloco = 0;
+            }
+            parte_declara_vars
+            //{
+               //insere_topo(&num_vars_pilha, &num_bloco_vars);
 
-              comando_composto
-              ;
+               //insere_topo(&rotulos_pilha, next_rot());
 
+               // Gera DSVS com rotulo
+               //char *rotulo = stack_item(rotulos, rotulos->top);
+               //sprintf(comando, "DSVS %s", rotulo);
+               //geraCodigo(NULL, comando);
+            //}
+            //parte_declara_subrotinas
+            //{
+            //   // Gera NADA com rotulo
+            //   char *rotulo = stack_pop(rotulos);
+            //   geraCodigo(rotulo, "NADA");
+            //   free(rotulo);
+            //}
+            //comando_composto
+            //{
+            //   int *temp = stack_pop(num_vars_stack);
+            //   num_bloco_vars = (*temp);
+            //   free(temp);
 
+            //   eliminaNivelLex(nivelLex+1);
+
+            //   if (num_bloco_vars > 0) {
+            //      eliminaTS(num_bloco_vars);
+            //      sprintf(comando, "DMEM %d", num_bloco_vars);
+            //      geraCodigo(NULL, comando);
+            //   }
+
+            //}
+;
 
 
 parte_declara_vars:  var
 ;
 
-
-var         : { } VAR declara_vars
+var         : { desloc = 0; } VAR declara_vars
             |
 ;
 
@@ -71,28 +123,188 @@ declara_var : { num_vars = 0; }
 ;
 
 tipo        : INTEGER {
-                  atualizaTipoVar(&tabela_simbolos, inteiro, num_vars);
+                  atualiza_tipo(t_integer, num_vars);
                }
             | BOOLEAN {
-                  atualizaTipoVar(&tabela_simbolos, booleano, num_vars);
+                  atualiza_tipo(t_boolean, num_vars);
                }
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
-              { /* insere �ltima vars na tabela de s�mbolos */ }
-            | IDENT { /* insere vars na tabela de s�mbolos */}
+              {
+                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+
+                  num_vars++;
+                  num_bloco_vars++;
+                  desloc++;
+              }
+            | IDENT {
+                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+
+                  num_vars++;
+                  num_bloco_vars++;
+                  desloc++;
+            }
 ;
 
-lista_idents: lista_idents VIRGULA IDENT
-            | IDENT
+lista_idents: lista_idents VIRGULA lista_aux
+            | lista_aux
 ;
 
+lista_aux: IDENT
+         | NUMERO
+;
+
+expressao: expressao_simples
+         | expressao_simples comparacao expressao_simples
+               {
+                  tipo *t1, *t2;
+                  t1 = (tipo *)remove_topo(&expressoes_pilha);
+                  t2 = (tipo *)remove_topo(&expressoes_pilha);
+
+                  if (*t1 != *t2)
+                     imprimeErro("Comparação de tipos diferentes");
+
+                  tipo tipo_bool = tipo_boolean;
+                  insere_topo(&expressoes_pilha, &tipo_bool);
+
+                  operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+                  sprintf(comando, "%s", gera_operacao_mepa(*op));
+                  geraCodigo(NULL, comando);
+
+                  free(t1);
+                  free(t2);
+               }
+;
+
+expressao_simples:
+;
+
+comparacao: IGUAL
+            {
+               operacoes_t op = igual;
+               insere_topo(&operacoes_pilha, &op);
+            }
+         | DIFERENTE
+            {
+               operacoes_t op = diferente;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MENOR
+            {
+               operacoes_t op = menor;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MENOR_OU_IGUAL
+            {
+               operacoes_t op = menor_ou_igual;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MAIOR
+            {
+               operacoes_t op = maior;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MAIOR_OU_IGUAL
+            {
+               operacoes_t op = maior_ou_igual;
+               stack_push(&operacoes_pilha, &op);
+            }
+;
 
 comando_composto: T_BEGIN comandos T_END
 
 comandos:
+         | comando PONTO_E_VIRGULA comandos
+         | comando
 ;
 
+comando: NUMERO DOIS_PONTOS comando_sem_rotulo
+         | comando_sem_rotulo
+
+comando_sem_rotulo:
+         | comando_repetitivo
+         | comando_condicional
+         | comando_composto
+         //| comando_read
+         //| comando_write
+                  
+;
+
+comando_repetitivo:
+	WHILE
+	{
+		char *WhileInicio = cria_rotulo(rotulo_print);
+		rotulo_print++;
+		char *WhileFim = cria_rotulo(rotulo_print);
+		rotulo_print++;
+
+		insere_topo(&pilha_rotulos, WhileInicio);
+		insere_topo(&pilha_rotulos, WhileFim);
+		geraCodigo(pega_rotulo(&pilha_rotulos, 2), "NADA");
+	}
+	expressao DO
+	{
+		char dsvf[100];
+		sprintf(dsvf, "DSVF %s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(NULL, dsvf);
+	}
+	comando_composto
+	{
+		char dsvs[100];
+		sprintf(dsvs, "DSVS %s", pega_rotulo(&pilha_rotulos, 2));
+		geraCodigo(NULL, dsvs);
+
+		char rot[100];
+		sprintf(rot, "%s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(rot, "NADA");
+
+		remove_topo(&pilha_rotulos, 2);
+	}
+;
+
+comando_condicional: {
+                        char * RotElse = cria_rotulo(rotulo_print);
+                        rotulo_print++;
+                        char * RotFim = cria_rotulo(rotulo_print);
+                        rotulo_print++;
+
+                        insere_topo(&pilha_rotulos, RotElse);
+                        insere_topo(&pilha_rotulos, RotFim);
+                     }
+                     bloco_if bloco_else
+                     {
+                        free(remove_topo(&pilha_rotulos));
+                        free(remove_topo(&pilha_rotulos));
+                     }
+;
+
+bloco_if: IF expressao
+         {
+
+         }
+         THEN comando_sem_rotulo
+;
+
+bloco_else: ELSE
+         {
+            // gera desvio para fim do if
+            sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
+            geraCodigo(NULL, comando);
+
+            // gera rotulo do else
+            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+         }
+         comando_sem_rotulo
+         {
+            // gera rotulo de fim do if
+            geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
+         }
+         | %prec LOWER_THAN_ELSE
+         {
+            // gera rotulo do else
+            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+         }
 
 %%
 
@@ -115,6 +327,11 @@ int main (int argc, char** argv) {
 /* -------------------------------------------------------------------
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
+   inicializa_tabela_simbolos();
+   inicializa_pilha(&num_vars_pilha);
+   inicializa_pilha(&pilha_rotulos);
+   inicializa_pilha(&expressoes_pilha);
+   inicializa_pilha(&operacoes_pilha);
 
    yyin=fp;
    yyparse();

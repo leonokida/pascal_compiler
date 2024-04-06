@@ -12,17 +12,19 @@
 
 #include "pilha.h"
 #include "tabela_simbolos.h"
+#include "desvios.h"
 
 int num_vars;
 int num_vars_bloco;
 pilha_t *num_vars_pilha;
 
 int nivel_lex = 0;
+int rotulo_print = 0;
 int desloc;
 
 pilha_t *tab_simbolos;
 
-pilha_t *rotulos_pilha;
+pilha_t *pilha_rotulos;
 
 char ident[50];
 char comando[50];
@@ -151,8 +153,49 @@ lista_aux: IDENT
 comando_composto: T_BEGIN comandos T_END
 
 comandos:
+         | comando PONTO_E_VIRGULA comandos
+         | comando
 ;
 
+comando: NUMERO DOIS_PONTOS comando_sem_rotulo
+         | comando_sem_rotulo
+
+comando_sem_rotulo:
+         | comando_repetitivo
+                  
+;
+
+comando_repetitivo:
+	WHILE
+	{
+		char *WhileInicio = cria_rotulo(rotulo_print);
+		rotulo_print++;
+		char *WhileFim = cria_rotulo(rotulo_print);
+		rotulo_print++;
+
+		insere_topo(&pilha_rotulos, WhileInicio);
+		insere_topo(&pilha_rotulos, WhileFim);
+		geraCodigo(pega_rotulo(&pilha_rotulos, 2), "NADA");
+	}
+	expressao DO
+	{
+		char dsvf[100];
+		sprintf(dsvf, "DSVF %s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(NULL, dsvf);
+	}
+	comando_composto
+	{
+		char dsvs[100];
+		sprintf(dsvs, "DSVS %s", pega_rotulo(&pilha_rotulos, 2));
+		geraCodigo(NULL, dsvs);
+
+		char rot[100];
+		sprintf(rot, "%s", pega_rotulo(&pilha_rotulos, 1));
+		geraCodigo(rot, "NADA");
+
+		remove_topo(&pilha_rotulos, 2);
+	}
+;
 
 %%
 
@@ -177,7 +220,7 @@ int main (int argc, char** argv) {
  * ------------------------------------------------------------------- */
    inicializa_tabela_simbolos();
    inicializa_pilha(&num_vars_pilha);
-   inicializa_pilha(&rotulos_pilha);
+   inicializa_pilha(&pilha_rotulos);
 
    yyin=fp;
    yyparse();

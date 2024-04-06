@@ -43,3 +43,37 @@ int imprimeErro ( char* erro ) {
   fprintf (stderr, "Erro na linha %d - %s\n", nl, erro);
   exit(-1);
 }
+
+char *gera_operacao_mepa(operacoes op) {
+  switch (op) {
+        case soma:
+            return "SOMA";
+        case subt:
+            return "SUBT";
+        case div:
+            return "DIVI";
+        case mult:
+            return "MULT";
+        case and:
+            return "CONJ";
+        case or:
+            return "DISJ";
+        case not:
+            return "NEGA";
+        case menor:
+            return "CMME";
+        case maior:
+            return "CMMA";
+        case igual:
+            return "CMIG";
+        case diferente:
+            return "CMDG";
+        case menor_ou_igual:
+            return "CMEG";
+        case maior_ou_igual:
+            return "CMAG";
+        default:
+            return "inválido";
+    }
+
+}

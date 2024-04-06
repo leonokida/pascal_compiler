@@ -23,8 +23,9 @@ int rotulo_print = 0;
 int desloc;
 
 pilha_t *tab_simbolos;
-
 pilha_t *pilha_rotulos;
+pilha_t *operacoes_pilha;
+pilha_t *expressoes_pilha;
 
 char ident[50];
 char comando[50];
@@ -39,6 +40,12 @@ char comando[50];
 %token MAIOR MAIOR_OU_IGUAL OR AND THEN NOT SOMA
 %token SUBTRAI DIV MUL MOD INTEGER LONGINT REAL CHAR 
 %token BOOLEAN NUMERO 
+
+/* Para funcionar o IF THEN ELSE
+   Precedências são crescentes, logo "lower_than_else" < "else" */
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 
 %%
 
@@ -148,7 +155,62 @@ lista_aux: IDENT
          | NUMERO
 ;
 
+expressao: expressao_simples
+         | expressao_simples comparacao expressao_simples
+               {
+                  tipo *t1, *t2;
+                  t1 = (tipo *)remove_topo(&expressoes_pilha);
+                  t2 = (tipo *)remove_topo(&expressoes_pilha);
 
+                  if (*t1 != *t2)
+                     imprimeErro("Comparação de tipos diferentes");
+
+                  tipo tipo_bool = tipo_boolean;
+                  insere_topo(&expressoes_pilha, &tipo_bool);
+
+                  operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+                  sprintf(comando, "%s", gera_operacao_mepa(*op));
+                  geraCodigo(NULL, comando);
+
+                  free(t1);
+                  free(t2);
+               }
+;
+
+expressao_simples:
+;
+
+comparacao: IGUAL
+            {
+               operacoes_t op = igual;
+               insere_topo(&operacoes_pilha, &op);
+            }
+         | DIFERENTE
+            {
+               operacoes_t op = diferente;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MENOR
+            {
+               operacoes_t op = menor;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MENOR_OU_IGUAL
+            {
+               operacoes_t op = menor_ou_igual;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MAIOR
+            {
+               operacoes_t op = maior;
+               stack_push(&operacoes_pilha, &op);
+            }
+         | MAIOR_OU_IGUAL
+            {
+               operacoes_t op = maior_ou_igual;
+               stack_push(&operacoes_pilha, &op);
+            }
+;
 
 comando_composto: T_BEGIN comandos T_END
 
@@ -162,6 +224,10 @@ comando: NUMERO DOIS_PONTOS comando_sem_rotulo
 
 comando_sem_rotulo:
          | comando_repetitivo
+         | comando_condicional
+         | comando_composto
+         //| comando_read
+         //| comando_write
                   
 ;
 
@@ -197,6 +263,49 @@ comando_repetitivo:
 	}
 ;
 
+comando_condicional: {
+                        char * RotElse = cria_rotulo(rotulo_print);
+                        rotulo_print++;
+                        char * RotFim = cria_rotulo(rotulo_print);
+                        rotulo_print++;
+
+                        insere_topo(&pilha_rotulos, RotElse);
+                        insere_topo(&pilha_rotulos, RotFim);
+                     }
+                     bloco_if bloco_else
+                     {
+                        free(remove_topo(&pilha_rotulos));
+                        free(remove_topo(&pilha_rotulos));
+                     }
+;
+
+bloco_if: IF expressao
+         {
+
+         }
+         THEN comando_sem_rotulo
+;
+
+bloco_else: ELSE
+         {
+            // gera desvio para fim do if
+            sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
+            geraCodigo(NULL, comando);
+
+            // gera rotulo do else
+            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+         }
+         comando_sem_rotulo
+         {
+            // gera rotulo de fim do if
+            geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
+         }
+         | %prec LOWER_THAN_ELSE
+         {
+            // gera rotulo do else
+            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+         }
+
 %%
 
 int main (int argc, char** argv) {
@@ -221,6 +330,8 @@ int main (int argc, char** argv) {
    inicializa_tabela_simbolos();
    inicializa_pilha(&num_vars_pilha);
    inicializa_pilha(&pilha_rotulos);
+   inicializa_pilha(&expressoes_pilha);
+   inicializa_pilha(&operacoes_pilha);
 
    yyin=fp;
    yyparse();

@@ -3,23 +3,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-pilha_t *inicializa_tabela_simbolos() {
-    pilha_t *tabela_simbolos;
-    inicializa_pilha(&tabela_simbolos);
-    return tabela_simbolos;
+// Variáveis globais da tabela de símbolos e do nível léxico
+extern pilha_t *tab_simbolos;
+extern int nivel_lex;
+
+void inicializa_tabela_simbolos() {
+    inicializa_pilha(&tab_simbolos);
 }
 
-int insere_simbolo(pilha_t **tabela_simbolos, entrada_tabela_simbolos * simbolo) {
-    return insere_topo(tabela_simbolos, simbolo);
+int insere_simbolo(entrada_tabela_simbolos * simbolo) {
+    return insere_topo(&tab_simbolos, simbolo);
 }
 
-void retira_simbolos(pilha_t **tabela_simbolos, int n) {
+void retira_simbolos(int n) {
     for (int i = 0; i < n; i++)
-        remove_topo(tabela_simbolos);
+        remove_topo(&tab_simbolos);
 }
 
-entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador) {
-    pilha_t *iter = tabela_simbolos;
+entrada_tabela_simbolos *busca(char *identificador) {
+    pilha_t *iter = tab_simbolos;
     while (iter != NULL) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
         if (strcmp(identificador, simbolo_atual->id) == 0)
@@ -29,39 +31,36 @@ entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador) {
     return NULL;
 }
 
-void atualiza_tipo(pilha_t **tabela_simbolos, tipo t, int n) {
-    pilha_t *iter = *tabela_simbolos;
+void atualiza_tipo(tipo t, int n) {
+    pilha_t *iter = tab_simbolos;
     int i = 0;
     while ((iter != NULL) || (i<n)) {
-        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
-        atributos_var_simples * atributo_atual = (atributos_var_simples *) simbolo_atual->atributos;
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
+        atributos_var_simples *atributo_atual = (atributos_var_simples *)simbolo_atual->atributos;
         atributo_atual->tipo_var = t;
         iter = iter->prox;
         i++;
     }
-    return NULL;
 }
 
-void remover_tipo_lexico(pilha_t **tabela_simbolos, int nL) {
-    if(tabela_simbolos == NULL) 
+void remove_nivel_lexico(int nL) {
+    if(tab_simbolos == NULL) 
         return;
-    pilha_t *iter = *tabela_simbolos;
+    pilha_t *iter = tab_simbolos;
     while (iter != NULL) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
-        if (simbolo_atual->nivel == nL){
-            iter = iter->prox;
-            remove_topo(tabela_simbolos);
-        }
-        else    
+        if (simbolo_atual->nivel < nL)
             return;
-    }
 
+        iter = iter->prox;
+        remove_topo(&tab_simbolos);
+    }
 }
 
-entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, int nivel, char *id, void *atributos) {
+entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos) {
     entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
     novo_simb->cat = cat;
-    novo_simb->nivel = nivel;
+    novo_simb->nivel = nivel_lex;
     novo_simb->id = id;
     novo_simb->atributos = atributos;
     return novo_simb;
@@ -107,6 +106,8 @@ void imprime_simbolo(void *simbolo) {
     {
     case var_simples:
         printf("# Variável simples\n");
+        atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;
+        printf("# Tipo: %d\n", atr_var->tipo_var);
         break;
     case procedimento:
         printf("# Procedimento\n");
@@ -125,6 +126,6 @@ void imprime_simbolo(void *simbolo) {
     printf("###########\n");
 }
 
-void imprime_tabela_simbolos(pilha_t *tabela_simbolos) {
-    imprime_pilha(tabela_simbolos, imprime_simbolo);
+void imprime_tabela_simbolos() {
+    imprime_pilha(tab_simbolos, imprime_simbolo);
 }

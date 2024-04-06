@@ -10,8 +10,22 @@
 #include <string.h>
 #include "compilador.h"
 
+#include "pilha.h"
+#include "tabela_simbolos.h"
+
 int num_vars;
-pilha_t *tabela_simbolosgit 
+int num_vars_bloco;
+pilha_t *num_vars_pilha;
+
+int nivel_lex = 0;
+int desloc;
+
+pilha_t *tab_simbolos;
+
+pilha_t *rotulos_pilha;
+
+char ident[50];
+char comando[50];
 
 %}
 
@@ -26,6 +40,7 @@ pilha_t *tabela_simbolosgit
 
 %%
 
+/* regra 1*/
 programa    :{
              geraCodigo (NULL, "INPP");
              }
@@ -36,22 +51,50 @@ programa    :{
              }
 ;
 
-bloco       :
-              parte_declara_vars
-              {
-              }
+/* regra 2 */
+bloco       :{
+               num_vars_bloco = 0;
+            }
+            parte_declara_vars
+            //{
+               //insere_topo(&num_vars_pilha, &num_bloco_vars);
 
-              comando_composto
-              ;
+               //insere_topo(&rotulos_pilha, next_rot());
 
+               // Gera DSVS com rotulo
+               //char *rotulo = stack_item(rotulos, rotulos->top);
+               //sprintf(comando, "DSVS %s", rotulo);
+               //geraCodigo(NULL, comando);
+            //}
+            //parte_declara_subrotinas
+            //{
+            //   // Gera NADA com rotulo
+            //   char *rotulo = stack_pop(rotulos);
+            //   geraCodigo(rotulo, "NADA");
+            //   free(rotulo);
+            //}
+            //comando_composto
+            //{
+            //   int *temp = stack_pop(num_vars_stack);
+            //   num_bloco_vars = (*temp);
+            //   free(temp);
 
+            //   eliminaNivelLex(nivelLex+1);
+
+            //   if (num_bloco_vars > 0) {
+            //      eliminaTS(num_bloco_vars);
+            //      sprintf(comando, "DMEM %d", num_bloco_vars);
+            //      geraCodigo(NULL, comando);
+            //   }
+
+            //}
+;
 
 
 parte_declara_vars:  var
 ;
 
-
-var         : { } VAR declara_vars
+var         : { desloc = 0; } VAR declara_vars
             |
 ;
 
@@ -71,21 +114,38 @@ declara_var : { num_vars = 0; }
 ;
 
 tipo        : INTEGER {
-                  atualizaTipoVar(&tabela_simbolos, inteiro, num_vars);
+                  atualiza_tipo(t_integer, num_vars);
                }
             | BOOLEAN {
-                  atualizaTipoVar(&tabela_simbolos, booleano, num_vars);
+                  atualiza_tipo(t_boolean, num_vars);
                }
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
-              { /* insere �ltima vars na tabela de s�mbolos */ }
-            | IDENT { /* insere vars na tabela de s�mbolos */}
+              {
+                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+
+                  num_vars++;
+                  num_bloco_vars++;
+                  desloc++;
+              }
+            | IDENT {
+                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+
+                  num_vars++;
+                  num_bloco_vars++;
+                  desloc++;
+            }
 ;
 
-lista_idents: lista_idents VIRGULA IDENT
-            | IDENT
+lista_idents: lista_idents VIRGULA lista_aux
+            | lista_aux
 ;
+
+lista_aux: IDENT
+         | NUMERO
+;
+
 
 
 comando_composto: T_BEGIN comandos T_END
@@ -115,6 +175,9 @@ int main (int argc, char** argv) {
 /* -------------------------------------------------------------------
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
+   inicializa_tabela_simbolos();
+   inicializa_pilha(&num_vars_pilha);
+   inicializa_pilha(&rotulos_pilha);
 
    yyin=fp;
    yyparse();

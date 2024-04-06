@@ -61,19 +61,22 @@ typedef struct atributos_param_formal
 } atributos_param_formal;
 
 // Inicializa a pilha da tabela de símbolos
-pilha_t *inicializa_tabela_simbolos();
+void inicializa_tabela_simbolos();
 
 // Insere símbolos na tabela
-int insere_simbolo(pilha_t **tabela_simbolos, entrada_tabela_simbolos * simbolo);
+int insere_simbolo(entrada_tabela_simbolos * simbolo);
 
 // Retira os n últimos símbolos inseridos na tabela
-void retira_simbolos(pilha_t **tabela_simbolos, int n);
+void retira_simbolos(int n);
 
 // Busca e retorna o símbolo com o identificador buscado; retorna Null se não encontra
-entrada_tabela_simbolos *busca(pilha_t *tabela_simbolos, char *identificador);
+entrada_tabela_simbolos *busca(char *identificador);
+
+// Atualiza o tipo das últimas n entradas na tabela de símbolos
+void atualiza_tipo(tipo t, int n);
 
 // Cria o símbolo para ser inserido na tabela ("atributos" deve conter uma struct de atributos criada previamente)
-entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, int nivel, char *id, void *atributos);
+entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos);
 
 // Cria a struct de atributos de variável simples para inserir na struct do símbolo
 atributos_var_simples *cria_atributos_var_simples(tipo tipo_var, int deslocamento);
@@ -87,9 +90,7 @@ atributos_funcao *cria_atributos_funcao(char *rotulo, int num_params, tipo tipo_
 // Cria a struct de atributos de parâmetro formal para inserir na struct do símbolo
 atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass, int deslocamento);
 
-void atualiza_tipo(pilha_t **tabela_simbolos, tipo t, int n);
-
 // Função para imprimir a tabela de símbolos
-void imprime_tabela_simbolos(pilha_t *tabela_simbolos);
+void imprime_tabela_simbolos();
 
 #endif

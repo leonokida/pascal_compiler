@@ -16,7 +16,6 @@
 
 int num_vars;
 int num_vars_bloco;
-pilha_t *num_vars_pilha;
 
 int nivel_lex = 0;
 int rotulo_print = 0;
@@ -26,9 +25,11 @@ pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
 pilha_t *operacoes_pilha;
 pilha_t *expressoes_pilha;
+pilha_t *num_vars_pilha;
 
 char ident[50];
 char comando[50];
+char mensagem_erro[50];
 
 %}
 

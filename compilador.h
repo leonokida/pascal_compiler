@@ -54,6 +54,22 @@ extern int nivel_lexico;
 extern int desloc;
 extern int nl;
 
+extern int num_vars;
+extern int num_vars_bloco;
+
+extern int nivel_lex = 0;
+extern int rotulo_print = 0;
+extern int desloc;
+
+extern pilha_t *pilha_rotulos;
+extern pilha_t *operacoes_pilha;
+extern pilha_t *expressoes_pilha;
+extern pilha_t *num_vars_pilha;
+
+extern char ident[50];
+extern char comando[50];
+extern char mensagem_erro[50];
+
 
 /* -------------------------------------------------------------------
  * prototipos globais

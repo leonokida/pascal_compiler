@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
+#include "pilha.h"
+#include "tabela_simbolos.h"
 
 
 /* -------------------------------------------------------------------
@@ -75,5 +77,35 @@ char *gera_operacao_mepa(operacoes op) {
         default:
             return "inválido";
     }
+
+}
+
+void leitura(char *token) {
+    entrada_tabela_simbolos *simbolo = busca(token);
+    if (simbolo == NULL) {
+        sprintf(mensagem_erro, "read() - Símbolo %s não encontrado", token);
+        imprimeErro(mensagem_erro);
+    }
+
+    geraCodigo(NULL, "LEIT");
+
+    switch (simbolo->cat)
+    {
+    case var_simples:
+        atributos_var_simples *atr = (atributos_var_simples *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        break;
+    
+    case param_formal:
+        atributos_param_formal *atr = (atributos_param_formal *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        break;
+
+    default:
+        sprintf(mensagem_erro, "read() - %s não é variável ou parâmetro", token);
+        imprimeErro(mensagem_erro);
+        break;
+    }
+    geraCodigo(NULL, comando);
 
 }

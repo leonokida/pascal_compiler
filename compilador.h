@@ -78,6 +78,7 @@ extern char mensagem_erro[50];
 void geraCodigo (char*, char*);
 int imprimeErro(char *erro);
 char *gera_operacao_mepa(operacoes op);
+void leitura(char *token);
 
 int yylex();
 void yyerror(const char *s);

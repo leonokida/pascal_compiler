@@ -16,7 +16,6 @@
 
 int num_vars;
 int num_vars_bloco;
-pilha_t *num_vars_pilha;
 
 int nivel_lex = 0;
 int rotulo_print = 0;
@@ -26,9 +25,11 @@ pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
 pilha_t *operacoes_pilha;
 pilha_t *expressoes_pilha;
+pilha_t *num_vars_pilha;
 
-char ident[50];
 char comando[50];
+char mensagem_erro[50];
+char token[TAM_TOKEN];
 
 %}
 
@@ -39,7 +40,7 @@ char comando[50];
 %token ELSE WHILE DO IGUAL DIFERENTE MENOR MENOR_OU_IGUAL
 %token MAIOR MAIOR_OU_IGUAL OR AND THEN NOT SOMA
 %token SUBTRAI DIV MUL MOD INTEGER LONGINT REAL CHAR 
-%token BOOLEAN NUMERO 
+%token BOOLEAN NUMERO READ WRITE
 
 /* Para funcionar o IF THEN ELSE
    Precedências são crescentes, logo "lower_than_else" < "else" */
@@ -226,8 +227,8 @@ comando_sem_rotulo:
          | comando_repetitivo
          | comando_condicional
          | comando_composto
-         //| comando_read
-         //| comando_write
+         | comando_read
+         | comando_write
                   
 ;
 
@@ -305,6 +306,35 @@ bloco_else: ELSE
             // gera rotulo do else
             geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
          }
+;
+
+comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
+;
+
+/* parâmetros do read */
+read_params: read_params VIRGULA IDENT
+            {
+               leitura(token);
+            }
+           | IDENT
+            {
+               leitura(token);
+            }
+;
+
+comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES
+;
+
+/* parâmetros do write */
+write_params: write_params VIRGULA expressao
+            {
+               geraCodigo(NULL, "IMPR");
+            }
+           | expressao
+            {
+               geraCodigo(NULL, "IMPR");
+            }
+;
 
 %%
 

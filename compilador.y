@@ -25,6 +25,8 @@ pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
 pilha_t *operacoes_pilha;
 pilha_t *expressoes_pilha;
+pilha_t *termos_pilha;
+pilha_t *fatores_pilha;
 pilha_t *num_vars_pilha;
 
 char comando[50];
@@ -186,38 +188,95 @@ expressao: expressao_simples
 ;
 
 /* regra 27 */
-expressao_simples:
+expressao_simples: expressao_simples sinal_ou_or termo
+   {
+      tipo *t1, *t2;
+      t1 = (tipo *)remove_topo(&expressoes_pilha);
+      t2 = (tipo *)remove_topo(&termos_pilha);
+
+      if (*t1 != *t2)
+         imprimeErro("Expressão usa tipos diferentes");
+
+      insere_topo(&expressoes_pilha, t1);
+
+      operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+      sprintf(comando, "%s", gera_operacao_mepa(*op));
+      geraCodigo(NULL, comando);
+
+      free(t1);
+      free(t2);
+   }
+   | sinal termo
+   {
+      tipo *t1 = (tipo *)remove_topo(&termos_pilha);
+      insere_topo(&expressoes_pilha, t1);
+
+      operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+      // inverte sinal do termo
+      if (*op == subt) {
+         sprintf(comando, "INVR");
+         geraCodigo(NULL, comando);
+      }
+      free(t1);
+   }
+   | termo
+   {
+      tipo *t1 = (tipo *)remove_topo(&termos_pilha);
+      insere_topo(&expressoes_pilha, t1);
+
+      free(t1);
+   }
 ;
+
+/* usado em expressão simples */
+sinal_ou_or: sinal
+   | OR
+   {
+      operacoes op = or;
+      insere_topo(&operacoes_pilha, &op);
+   }
+;
+
+sinal: SOMA
+   {
+      operacoes op = soma;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | SUBTRAI
+   {
+      operacoes op = subt;
+      insere_topo(&operacoes_pilha, &op);
+   }
 
 /* regra 26 */
 relacao: IGUAL
    {
-      operacoes_t op = igual;
+      operacoes op = igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | DIFERENTE
    {
-      operacoes_t op = diferente;
+      operacoes op = diferente;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR
    {
-      operacoes_t op = menor;
+      operacoes op = menor;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR_OU_IGUAL
    {
-      operacoes_t op = menor_ou_igual;
+      operacoes op = menor_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR
    {
-      operacoes_t op = maior;
+      operacoes op = maior;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR_OU_IGUAL
    {
-      operacoes_t op = maior_ou_igual;
+      operacoes op = maior_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
@@ -325,6 +384,7 @@ bloco_else: ELSE
    }
 ;
 
+/* read e write */
 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
 ;
 
@@ -378,6 +438,8 @@ int main (int argc, char** argv) {
    inicializa_pilha(&num_vars_pilha);
    inicializa_pilha(&pilha_rotulos);
    inicializa_pilha(&expressoes_pilha);
+   inicializa_pilha(&termos_pilha);
+   inicializa_pilha(&fatores_pilha);
    inicializa_pilha(&operacoes_pilha);
 
    yyin=fp;

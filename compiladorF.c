@@ -77,7 +77,6 @@ char *gera_operacao_mepa(operacoes op) {
         default:
             return "inválido";
     }
-
 }
 
 void leitura(char *token) {

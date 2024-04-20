@@ -51,187 +51,202 @@ char token[TAM_TOKEN];
 %%
 
 /* regra 1*/
-programa    :{
-             geraCodigo (NULL, "INPP");
-             }
-             PROGRAM IDENT
-             ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-             bloco PONTO {
-             geraCodigo (NULL, "PARA");
-             }
+programa    :
+   {
+      geraCodigo (NULL, "INPP");
+   }
+   PROGRAM IDENT
+   ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
+   bloco PONTO 
+   {
+      geraCodigo (NULL, "PARA");
+   }
 ;
 
 /* regra 2 */
-bloco       :{
-               num_vars_bloco = 0;
-            }
-            parte_declara_vars
-            //{
-               //insere_topo(&num_vars_pilha, &num_bloco_vars);
+bloco       :
+   {
+      num_vars_bloco = 0;
+   }
+   parte_declara_vars
+   //{
+      //insere_topo(&num_vars_pilha, &num_bloco_vars);
 
-               //insere_topo(&rotulos_pilha, next_rot());
+      //insere_topo(&rotulos_pilha, next_rot());
 
-               // Gera DSVS com rotulo
-               //char *rotulo = stack_item(rotulos, rotulos->top);
-               //sprintf(comando, "DSVS %s", rotulo);
-               //geraCodigo(NULL, comando);
-            //}
-            //parte_declara_subrotinas
-            //{
-            //   // Gera NADA com rotulo
-            //   char *rotulo = stack_pop(rotulos);
-            //   geraCodigo(rotulo, "NADA");
-            //   free(rotulo);
-            //}
-            //comando_composto
-            //{
-            //   int *temp = stack_pop(num_vars_stack);
-            //   num_bloco_vars = (*temp);
-            //   free(temp);
+      // Gera DSVS com rotulo
+      //char *rotulo = stack_item(rotulos, rotulos->top);
+      //sprintf(comando, "DSVS %s", rotulo);
+      //geraCodigo(NULL, comando);
+   //}
+   //parte_declara_subrotinas
+   //{
+   //   // Gera NADA com rotulo
+   //   char *rotulo = stack_pop(rotulos);
+   //   geraCodigo(rotulo, "NADA");
+   //   free(rotulo);
+   //}
+   //comando_composto
+   //{
+   //   int *temp = stack_pop(num_vars_stack);
+   //   num_bloco_vars = (*temp);
+   //   free(temp);
 
-            //   eliminaNivelLex(nivelLex+1);
+   //   eliminaNivelLex(nivelLex+1);
 
-            //   if (num_bloco_vars > 0) {
-            //      eliminaTS(num_bloco_vars);
-            //      sprintf(comando, "DMEM %d", num_bloco_vars);
-            //      geraCodigo(NULL, comando);
-            //   }
+   //   if (num_bloco_vars > 0) {
+   //      eliminaTS(num_bloco_vars);
+   //      sprintf(comando, "DMEM %d", num_bloco_vars);
+   //      geraCodigo(NULL, comando);
+   //   }
 
-            //}
+   //}
 ;
 
-
-parte_declara_vars:  var
-;
-
-var         : { desloc = 0; } VAR declara_vars
-            |
+/* regras 8 e 9 */
+parte_declara_vars: 
+   | { 
+      desloc = 0; 
+   } VAR declara_vars
 ;
 
 declara_vars: declara_vars declara_var
-            | declara_var
+   | declara_var
 ;
 
 declara_var : { num_vars = 0; }
-              lista_id_var DOIS_PONTOS
-              tipo
-              { 
-                  /* Aloca memória pras variáveis */
-                  sprintf(comando, "AMEM %d", num_vars);
-                  geraCodigo(NULL, comando);
-              }
-              PONTO_E_VIRGULA
+   lista_id_var DOIS_PONTOS
+   tipo
+   { 
+      /* Aloca memória pras variáveis */
+      sprintf(comando, "AMEM %d", num_vars);
+      geraCodigo(NULL, comando);
+   }
+   PONTO_E_VIRGULA
 ;
 
-tipo        : INTEGER {
-                  atualiza_tipo(t_integer, num_vars);
-               }
-            | BOOLEAN {
-                  atualiza_tipo(t_boolean, num_vars);
-               }
+tipo: INTEGER {
+      atualiza_tipo(t_integer, num_vars);
+   }
+   | BOOLEAN {
+      atualiza_tipo(t_boolean, num_vars);
+   }
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
-              {
-                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
-
-                  num_vars++;
-                  num_bloco_vars++;
-                  desloc++;
-              }
-            | IDENT {
-                  insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
-
-                  num_vars++;
-                  num_bloco_vars++;
-                  desloc++;
-            }
+   {
+      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      num_vars++;
+      num_vars_bloco++;
+      desloc++;
+   }
+   | IDENT 
+   {
+      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      num_vars++;
+      num_vars_bloco++;
+      desloc++;
+   }
 ;
 
 lista_idents: lista_idents VIRGULA lista_aux
-            | lista_aux
+   | lista_aux
 ;
 
 lista_aux: IDENT
-         | NUMERO
+   | NUMERO
 ;
 
+/* regra 24 */
+lista_expressoes: lista_expressoes VIRGULA expressao
+   | expressao
+;
+
+/* regra 25 */
 expressao: expressao_simples
-         | expressao_simples comparacao expressao_simples
-               {
-                  tipo *t1, *t2;
-                  t1 = (tipo *)remove_topo(&expressoes_pilha);
-                  t2 = (tipo *)remove_topo(&expressoes_pilha);
+   | expressao_simples relacao expressao_simples
+   {
+      tipo *t1, *t2;
+      t1 = (tipo *)remove_topo(&expressoes_pilha);
+      t2 = (tipo *)remove_topo(&expressoes_pilha);
 
-                  if (*t1 != *t2)
-                     imprimeErro("Comparação de tipos diferentes");
+      if (*t1 != *t2)
+         imprimeErro("Comparação de tipos diferentes");
 
-                  tipo tipo_bool = tipo_boolean;
-                  insere_topo(&expressoes_pilha, &tipo_bool);
+      tipo tipo_bool = tipo_boolean;
+      insere_topo(&expressoes_pilha, &tipo_bool);
 
-                  operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
-                  sprintf(comando, "%s", gera_operacao_mepa(*op));
-                  geraCodigo(NULL, comando);
+      operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+      sprintf(comando, "%s", gera_operacao_mepa(*op));
+      geraCodigo(NULL, comando);
 
-                  free(t1);
-                  free(t2);
-               }
+      free(t1);
+      free(t2);
+   }
 ;
 
+/* regra 27 */
 expressao_simples:
 ;
 
-comparacao: IGUAL
-            {
-               operacoes_t op = igual;
-               insere_topo(&operacoes_pilha, &op);
-            }
-         | DIFERENTE
-            {
-               operacoes_t op = diferente;
-               stack_push(&operacoes_pilha, &op);
-            }
-         | MENOR
-            {
-               operacoes_t op = menor;
-               stack_push(&operacoes_pilha, &op);
-            }
-         | MENOR_OU_IGUAL
-            {
-               operacoes_t op = menor_ou_igual;
-               stack_push(&operacoes_pilha, &op);
-            }
-         | MAIOR
-            {
-               operacoes_t op = maior;
-               stack_push(&operacoes_pilha, &op);
-            }
-         | MAIOR_OU_IGUAL
-            {
-               operacoes_t op = maior_ou_igual;
-               stack_push(&operacoes_pilha, &op);
-            }
+/* regra 26 */
+relacao: IGUAL
+   {
+      operacoes_t op = igual;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | DIFERENTE
+   {
+      operacoes_t op = diferente;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | MENOR
+   {
+      operacoes_t op = menor;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | MENOR_OU_IGUAL
+   {
+      operacoes_t op = menor_ou_igual;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | MAIOR
+   {
+      operacoes_t op = maior;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | MAIOR_OU_IGUAL
+   {
+      operacoes_t op = maior_ou_igual;
+      insere_topo(&operacoes_pilha, &op);
+   }
 ;
 
+/* regra 16 */
 comando_composto: T_BEGIN comandos T_END
 
+/* regra 17 */
 comandos:
-         | comando PONTO_E_VIRGULA comandos
-         | comando
+   | comando PONTO_E_VIRGULA comandos
+   | comando
 ;
 
 comando: NUMERO DOIS_PONTOS comando_sem_rotulo
-         | comando_sem_rotulo
+   | comando_sem_rotulo
 
+/* regra 18 */
 comando_sem_rotulo:
-         | comando_repetitivo
-         | comando_condicional
-         | comando_composto
-         | comando_read
-         | comando_write
-                  
+   //| atribuicao
+   //| chamada_procedimento
+   //| desvio
+   | comando_repetitivo
+   | comando_condicional
+   | comando_composto
+   | comando_read
+   | comando_write            
 ;
 
+/* regra 23 */
 comando_repetitivo:
 	WHILE
 	{
@@ -264,48 +279,50 @@ comando_repetitivo:
 	}
 ;
 
-comando_condicional: {
-                        char * RotElse = cria_rotulo(rotulo_print);
-                        rotulo_print++;
-                        char * RotFim = cria_rotulo(rotulo_print);
-                        rotulo_print++;
+/* regra 22 */
+comando_condicional: 
+   {
+      char * RotElse = cria_rotulo(rotulo_print);
+      rotulo_print++;
+      char * RotFim = cria_rotulo(rotulo_print);
+      rotulo_print++;
 
-                        insere_topo(&pilha_rotulos, RotElse);
-                        insere_topo(&pilha_rotulos, RotFim);
-                     }
-                     bloco_if bloco_else
-                     {
-                        free(remove_topo(&pilha_rotulos));
-                        free(remove_topo(&pilha_rotulos));
-                     }
+      insere_topo(&pilha_rotulos, RotElse);
+      insere_topo(&pilha_rotulos, RotFim);
+   }
+   bloco_if bloco_else
+   {
+      free(remove_topo(&pilha_rotulos));
+      free(remove_topo(&pilha_rotulos));
+   }
 ;
 
 bloco_if: IF expressao
-         {
+   {
 
-         }
-         THEN comando_sem_rotulo
+   }
+   THEN comando_sem_rotulo
 ;
 
 bloco_else: ELSE
-         {
-            // gera desvio para fim do if
-            sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
-            geraCodigo(NULL, comando);
+   {
+      // gera desvio para fim do if
+      sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
+      geraCodigo(NULL, comando);
 
-            // gera rotulo do else
-            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
-         }
-         comando_sem_rotulo
-         {
-            // gera rotulo de fim do if
-            geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
-         }
-         | %prec LOWER_THAN_ELSE
-         {
-            // gera rotulo do else
-            geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
-         }
+      // gera rotulo do else
+      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+   }
+   comando_sem_rotulo
+   {
+      // gera rotulo de fim do if
+      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
+   }
+   | %prec LOWER_THAN_ELSE
+   {
+      // gera rotulo do else
+      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+   }
 ;
 
 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
@@ -313,13 +330,13 @@ comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
 
 /* parâmetros do read */
 read_params: read_params VIRGULA IDENT
-            {
-               leitura(token);
-            }
-           | IDENT
-            {
-               leitura(token);
-            }
+   {
+      leitura(token);
+   }
+   | IDENT
+   {
+      leitura(token);
+   }
 ;
 
 comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES
@@ -327,13 +344,13 @@ comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES
 
 /* parâmetros do write */
 write_params: write_params VIRGULA expressao
-            {
-               geraCodigo(NULL, "IMPR");
-            }
-           | expressao
-            {
-               geraCodigo(NULL, "IMPR");
-            }
+   {
+      geraCodigo(NULL, "IMPR");
+   }
+   | expressao
+   {
+      geraCodigo(NULL, "IMPR");
+   }
 ;
 
 %%

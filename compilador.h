@@ -61,14 +61,21 @@ extern int nivel_lex = 0;
 extern int rotulo_print = 0;
 extern int desloc;
 
+entrada_tabela_simbolos *ident_comando;
+
+extern pilha_t *tab_simbolos;
 extern pilha_t *pilha_rotulos;
 extern pilha_t *operacoes_pilha;
 extern pilha_t *expressoes_pilha;
+extern pilha_t *termos_pilha;
+extern pilha_t *fatores_pilha;
 extern pilha_t *num_vars_pilha;
+extern pilha_t *ident_comando_pilha;
 
-extern char ident[50];
-extern char comando[50];
-extern char mensagem_erro[50];
+char comando[50];
+char mensagem_erro[50];
+char token[TAM_TOKEN];
+char ident[TAM_TOKEN];
 
 
 /* -------------------------------------------------------------------
@@ -79,6 +86,7 @@ void geraCodigo (char*, char*);
 int imprimeErro(char *erro);
 char *gera_operacao_mepa(operacoes op);
 void leitura(char *token);
+void gera_carregamento(entrada_tabela_simbolos *simb);
 
 int yylex();
 void yyerror(const char *s);

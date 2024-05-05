@@ -108,3 +108,57 @@ void leitura(char *token) {
     geraCodigo(NULL, comando);
 
 }
+
+void gera_carrega_valor(entrada_tabela_simbolos *simb) {
+    switch (simb->cat) {
+        case var_simples:
+            atributos_var_simples *atr_var = simb->atributos;
+            sprintf(comando, "CRVL %d, %d", simb->nivel, atr_var->deslocamento);
+            break;
+
+        case param_formal:
+            atributos_param_formal *atr_param = simb->atributos;
+            sprintf(comando, "CRVL %d, %d", simb->nivel, atr_param->deslocamento);
+            break;
+
+        default:
+            imprimeErro("Símbolo não pôde ser carregado");
+            break;
+    }
+    geraCodigo(NULL, comando);
+}
+
+void gera_carrega_valor_indireto(entrada_tabela_simbolos *simb) {
+    atributos_param_formal *atr_param = simb->atributos;
+    sprintf(comando, "CRVI %d, %d", simb->nivel, atr_param->deslocamento);
+    geraCodigo(NULL, comando);
+}
+
+void gera_carregamento(entrada_tabela_simbolos *simb) {
+    // falta cobrir casos de dentro de função
+    switch (simb->cat) {
+        case var_simples:
+            gera_carrega_valor(simb);
+            break;
+
+        case param_formal:
+            atributos_param_formal *atr_param = simb->atributos;
+            if (atr_param->pass == pass_referencia)
+                gera_carrega_valor_indireto(simb);
+            else
+                gera_carrega_valor(simb);
+            break;
+
+        case funcao:
+            atributos_funcao *atr_func = simb->atributos;
+            geraCodigo(NULL, "AMEM 1");
+            sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+            geraCodigo(NULL, comando);
+            break;
+
+        default:
+            sprintf(mensagem_erro, "Parâmetro %s é inválido", token);
+            imprimeErro(mensagem_erro);
+            break;
+    }
+}

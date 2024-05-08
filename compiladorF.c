@@ -48,31 +48,31 @@ int imprimeErro ( char* erro ) {
 
 char *gera_operacao_mepa(operacoes op) {
   switch (op) {
-        case soma:
+        case op_soma:
             return "SOMA";
-        case subt:
+        case op_subt:
             return "SUBT";
-        case div:
+        case op_div:
             return "DIVI";
-        case mult:
+        case op_mult:
             return "MULT";
-        case and:
+        case op_and:
             return "CONJ";
-        case or:
+        case op_or:
             return "DISJ";
-        case not:
+        case op_not:
             return "NEGA";
-        case menor:
+        case op_menor:
             return "CMME";
-        case maior:
+        case op_maior:
             return "CMMA";
-        case igual:
+        case op_igual:
             return "CMIG";
-        case diferente:
+        case op_diferente:
             return "CMDG";
-        case menor_ou_igual:
+        case op_menor_ou_igual:
             return "CMEG";
-        case maior_ou_igual:
+        case op_maior_ou_igual:
             return "CMAG";
         default:
             return "inválido";
@@ -91,13 +91,13 @@ void leitura(char *token) {
     switch (simbolo->cat)
     {
     case var_simples:
-        atributos_var_simples *atr = (atributos_var_simples *)simbolo->atributos;
-        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        atributos_var_simples *atr_var = (atributos_var_simples *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_var->deslocamento);
         break;
     
     case param_formal:
-        atributos_param_formal *atr = (atributos_param_formal *)simbolo->atributos;
-        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        atributos_param_formal *atr_param = (atributos_param_formal *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_param->deslocamento);
         break;
 
     default:

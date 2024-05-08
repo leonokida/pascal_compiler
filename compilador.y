@@ -34,7 +34,6 @@ pilha_t *ident_comando_pilha;
 
 char comando[50];
 char mensagem_erro[50];
-char token[TAM_TOKEN];
 char ident[TAM_TOKEN];
 
 %}
@@ -179,7 +178,7 @@ expressao: expressao_simples
       if (*t1 != *t2)
          imprimeErro("Comparação de tipos diferentes");
 
-      tipo tipo_bool = tipo_boolean;
+      tipo tipo_bool = t_boolean;
       insere_topo(&expressoes_pilha, &tipo_bool);
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
@@ -211,7 +210,7 @@ expressao_simples: expressao_simples sinal_ou_or termo
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       // inverte sinal do termo
-      if (*op == subt) {
+      if (*op == op_subt) {
          sprintf(comando, "INVR");
          geraCodigo(NULL, comando);
       }
@@ -227,19 +226,19 @@ expressao_simples: expressao_simples sinal_ou_or termo
 sinal_ou_or: sinal
    | OR
    {
-      operacoes op = or;
+      operacoes op = op_or;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
 
 sinal: SOMA
    {
-      operacoes op = soma;
+      operacoes op = op_soma;
       insere_topo(&operacoes_pilha, &op);
    }
    | SUBTRAI
    {
-      operacoes op = subt;
+      operacoes op = op_subt;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
@@ -253,7 +252,7 @@ termo: fator
    | termo operacao_termo fator
    {
       tipo *t1, *t2;
-      t1 = (tipo *)remove_topo(&termos_pilha)
+      t1 = (tipo *)remove_topo(&termos_pilha);
       t2 = (tipo *)remove_topo(&fatores_pilha);
 
       if (*t1 != *t2)
@@ -268,17 +267,17 @@ termo: fator
 
 operacao_termo: MUL
    {
-      operacoes op = mult;
+      operacoes op = op_mult;
       insere_topo(&operacoes_pilha, &op);
    }
    | DIV
    {
-      operacoes op = div;
+      operacoes op = op_div;
       insere_topo(&operacoes_pilha, &op);
    }
    | AND
    {
-      operacoes op = and;
+      operacoes op = op_and;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
@@ -335,7 +334,7 @@ var_ou_func: variavel
 variavel:
    {
       entrada_tabela_simbolos *simb = busca(ident);
-      if (*simb == NULL) {
+      if (simb == NULL) {
          sprintf(mensagem_erro, "Símbolo %s não encontrado", ident);
          imprimeErro(mensagem_erro);
       }
@@ -349,32 +348,32 @@ chamada_de_funcao:
 /* regra 26 */
 relacao: IGUAL
    {
-      operacoes op = igual;
+      operacoes op = op_igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | DIFERENTE
    {
-      operacoes op = diferente;
+      operacoes op = op_diferente;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR
    {
-      operacoes op = menor;
+      operacoes op = op_menor;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR_OU_IGUAL
    {
-      operacoes op = menor_ou_igual;
+      operacoes op = op_menor_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR
    {
-      operacoes op = maior;
+      operacoes op = op_maior;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR_OU_IGUAL
    {
-      operacoes op = maior_ou_igual;
+      operacoes op = op_maior_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
@@ -395,7 +394,7 @@ comando: NUMERO DOIS_PONTOS comando_sem_rotulo
 comando_sem_rotulo: IDENT
    {
       ident_comando = busca(token);
-      if (*ident_comando == NULL) {
+      if (ident_comando == NULL) {
          sprintf(mensagem_erro, "Símbolo %s não encontrado", token);
          imprimeErro(mensagem_erro);
       }
@@ -433,12 +432,12 @@ atribuicao: ATRIBUICAO
 
          case param_formal:
             atributos_param_formal *atr_param = (atributos_param_formal *)ident_comando->atributos;
-            if (atr_param->tipo != *t)
+            if (atr_param->tipo_param != *t)
                imprimeErro("Atribuição de valor que não é do tipo da variável");
 
-            if (atr_param->tipo_passagem == pass_valor)
+            if (atr_param->pass == pass_valor)
                sprintf(comando, "ARMZ %d, %d", ident_comando->nivel, atr_param->deslocamento);
-            else if (atrParam->tipo_passagem == pass_referencia)
+            else if (atr_param->pass == pass_referencia)
                sprintf(comando, "ARMI %d, %d", ident_comando->nivel, atr_param->deslocamento);
             else
                imprimeErro("Tipo de passagem do símbolo indefinido");
@@ -446,7 +445,7 @@ atribuicao: ATRIBUICAO
 
          case funcao:
             atributos_funcao *atr_func = (atributos_funcao *)ident_comando->atributos;
-            if (atr_func->tipo != *t)
+            if (atr_func->tipo_funcao != *t)
                imprimeErro("Atribuição de valor que não é do tipo da variável");
 
             sprintf(comando, "ARMZ %d, %d", ident_comando->nivel, atr_func->deslocamento);
@@ -477,25 +476,26 @@ comando_repetitivo:
 
 		insere_topo(&pilha_rotulos, WhileInicio);
 		insere_topo(&pilha_rotulos, WhileFim);
-		geraCodigo(pega_rotulo(&pilha_rotulos, 2), "NADA");
+		geraCodigo(pega_rotulo(pilha_rotulos, 2), "NADA");
 	}
 	expressao DO
 	{
 		char dsvf[100];
-		sprintf(dsvf, "DSVF %s", pega_rotulo(&pilha_rotulos, 1));
+		sprintf(dsvf, "DSVF %s", pega_rotulo(pilha_rotulos, 1));
 		geraCodigo(NULL, dsvf);
 	}
 	comando_composto
 	{
 		char dsvs[100];
-		sprintf(dsvs, "DSVS %s", pega_rotulo(&pilha_rotulos, 2));
+		sprintf(dsvs, "DSVS %s", pega_rotulo(pilha_rotulos, 2));
 		geraCodigo(NULL, dsvs);
 
 		char rot[100];
-		sprintf(rot, "%s", pega_rotulo(&pilha_rotulos, 1));
+		sprintf(rot, "%s", pega_rotulo(pilha_rotulos, 1));
 		geraCodigo(rot, "NADA");
 
-		remove_topo(&pilha_rotulos, 2);
+		remove_topo(&pilha_rotulos);
+      remove_topo(&pilha_rotulos);
 	}
 ;
 

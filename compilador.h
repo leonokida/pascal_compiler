@@ -11,6 +11,9 @@
  *
  * ------------------------------------------------------------------- */
 
+#include "pilha.h"
+#include "tabela_simbolos.h"
+
 #define TAM_TOKEN 16
 
 typedef enum simbolos {
@@ -28,19 +31,19 @@ typedef enum simbolos {
 } simbolos;
 
 typedef enum operacoes {
-    soma,
-    subt,
-    div,
-    mult,
-    and,
-    or,
-    not,
-    menor,
-    maior,
-    igual,
-    diferente,
-    menor_ou_igual,
-    maior_ou_igual
+    op_soma,
+    op_subt,
+    op_div,
+    op_mult,
+    op_and,
+    op_or,
+    op_not,
+    op_menor,
+    op_maior,
+    op_igual,
+    op_diferente,
+    op_menor_ou_igual,
+    op_maior_ou_igual
 } operacoes;
 
 
@@ -57,11 +60,11 @@ extern int nl;
 extern int num_vars;
 extern int num_vars_bloco;
 
-extern int nivel_lex = 0;
-extern int rotulo_print = 0;
+extern int nivel_lex;
+extern int rotulo_print;
 extern int desloc;
 
-entrada_tabela_simbolos *ident_comando;
+extern entrada_tabela_simbolos *ident_comando;
 
 extern pilha_t *tab_simbolos;
 extern pilha_t *pilha_rotulos;
@@ -72,10 +75,10 @@ extern pilha_t *fatores_pilha;
 extern pilha_t *num_vars_pilha;
 extern pilha_t *ident_comando_pilha;
 
-char comando[50];
-char mensagem_erro[50];
-char token[TAM_TOKEN];
-char ident[TAM_TOKEN];
+extern char comando[50];
+extern char mensagem_erro[50];
+extern char token[TAM_TOKEN];
+extern char ident[TAM_TOKEN];
 
 
 /* -------------------------------------------------------------------

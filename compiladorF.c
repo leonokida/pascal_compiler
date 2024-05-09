@@ -162,3 +162,51 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
             break;
     }
 }
+
+
+void imprime_operacoes(void *op) {
+    operacoes *oper = (operacoes *)op;
+    switch (*oper) {
+        case op_soma:
+            printf("SOMA\n");
+            break;
+        case op_subt:
+            printf("SUBT\n");
+            break;
+        case op_div:
+            printf("DIVI\n");
+            break;
+        case op_mult:
+            printf("MULT\n");
+            break;
+        case op_and:
+            printf("CONJ\n");
+            break;
+        case op_or:
+            printf("DISJ\n");
+            break;
+        case op_not:
+            printf("NEGA\n");
+            break;
+        case op_menor:
+            printf("CMME\n");
+            break;
+        case op_maior:
+            printf("CMMA\n");
+            break;
+        case op_igual:
+            printf("CMIG\n");
+            break;
+        case op_diferente:
+            printf("CMDG\n");
+            break;
+        case op_menor_ou_igual:
+            printf("CMEG\n");
+            break;
+        case op_maior_ou_igual:
+            printf("CMAG\n");
+            break;
+        default:
+            printf("inválido\n");
+    }
+}

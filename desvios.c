@@ -7,6 +7,7 @@ char *cria_rotulo(int numero_rotulo)
 {
     char *rotulo = (char *)malloc(10 * sizeof(char));
     sprintf(rotulo, "R%02d", numero_rotulo);
+    return rotulo;
 }
 
 char *pega_rotulo(pilha_t *pilha, int posicao)

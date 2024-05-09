@@ -483,24 +483,24 @@ comando_repetitivo:
 		char *WhileFim = cria_rotulo(rotulo_print);
 		rotulo_print++;
 
-		insere_topo(&pilha_rotulos, WhileInicio);
-		insere_topo(&pilha_rotulos, WhileFim);
-		geraCodigo(pega_rotulo(pilha_rotulos, 2), "NADA");
+		insere_topo(&pilha_rotulos, WhileInicio); // 1
+		insere_topo(&pilha_rotulos, WhileFim); // 0
+		geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
 	}
 	expressao DO
 	{
 		char dsvf[100];
-		sprintf(dsvf, "DSVF %s", pega_rotulo(pilha_rotulos, 1));
+		sprintf(dsvf, "DSVF %s", pega_rotulo(pilha_rotulos, 0));
 		geraCodigo(NULL, dsvf);
 	}
 	comando_composto
 	{
 		char dsvs[100];
-		sprintf(dsvs, "DSVS %s", pega_rotulo(pilha_rotulos, 2));
+		sprintf(dsvs, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
 		geraCodigo(NULL, dsvs);
 
 		char rot[100];
-		sprintf(rot, "%s", pega_rotulo(pilha_rotulos, 1));
+		sprintf(rot, "%s", pega_rotulo(pilha_rotulos, 0));
 		geraCodigo(rot, "NADA");
 
 		remove_topo(&pilha_rotulos);
@@ -516,8 +516,8 @@ comando_condicional:
       char * RotFim = cria_rotulo(rotulo_print);
       rotulo_print++;
 
-      insere_topo(&pilha_rotulos, RotElse);
-      insere_topo(&pilha_rotulos, RotFim);
+      insere_topo(&pilha_rotulos, RotElse); // 1
+      insere_topo(&pilha_rotulos, RotFim); // 0
    }
    bloco_if bloco_else
    {
@@ -536,7 +536,7 @@ bloco_if: IF expressao
       }
 
       // Gera DSVF com rotulo
-      sprintf(comando, "DSVF %s", pega_rotulo(pilha_rotulos, 0));
+      sprintf(comando, "DSVF %s", pega_rotulo(pilha_rotulos, 1));
       geraCodigo(NULL, comando);
    }
    THEN comando_sem_rotulo
@@ -545,21 +545,21 @@ bloco_if: IF expressao
 bloco_else: ELSE
    {
       // gera desvio para fim do if
-      sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
+      sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 0));
       geraCodigo(NULL, comando);
 
       // gera rotulo do else
-      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
    }
    comando_sem_rotulo
    {
       // gera rotulo de fim do if
-      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
    }
    | %prec LOWER_THAN_ELSE
    {
       // gera rotulo do else
-      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
    }
 ;
 

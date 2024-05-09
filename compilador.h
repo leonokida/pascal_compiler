@@ -90,6 +90,7 @@ int imprimeErro(char *erro);
 char *gera_operacao_mepa(operacoes op);
 void leitura(char *token);
 void gera_carregamento(entrada_tabela_simbolos *simb);
+void imprime_operacoes(void *op);
 
 int yylex();
 void yyerror(const char *s);

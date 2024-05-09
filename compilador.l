@@ -20,6 +20,8 @@
 
 #include "compilador.h"
 #include "compilador.tab.h"
+#include "pilha.h"
+#include "tabela_simbolos.h"
 
 //#define IMPRIME(STR) {};
 #define IMPRIME(STR) printf("%s    # %s \n", STR, token);

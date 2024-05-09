@@ -23,7 +23,7 @@ typedef struct entrada_tabela_simbolos
 {
     categoria_simbolo cat;
     int nivel;
-    char *id;
+    char id[16];
     void *atributos;
 } entrada_tabela_simbolos;
 

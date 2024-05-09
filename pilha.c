@@ -1,4 +1,5 @@
 #include "pilha.h"
+#include "tabela_simbolos.h"
 #include <stdio.h>
 #include <stdlib.h>
 

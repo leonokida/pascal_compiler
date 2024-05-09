@@ -33,7 +33,7 @@ pilha_t *num_vars_pilha;
 pilha_t *ident_comando_pilha;
 
 char comando[50];
-char mensagem_erro[50];
+char mensagem_erro[100];
 char ident[TAM_TOKEN];
 
 %}
@@ -122,7 +122,7 @@ declara_vars: declara_vars declara_var
 declara_var : { num_vars = 0; }
    lista_id_var DOIS_PONTOS
    tipo
-   { 
+   {
       /* Aloca memória pras variáveis */
       sprintf(comando, "AMEM %d", num_vars);
       geraCodigo(NULL, comando);
@@ -140,14 +140,18 @@ tipo: INTEGER {
 
 lista_id_var: lista_id_var VIRGULA IDENT
    {
-      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      atributos_var_simples *atr_var = cria_atributos_var_simples(t_indefinido, desloc);
+      entrada_tabela_simbolos *entrada = cria_simbolo(var_simples, token, atr_var);
+      insere_simbolo(entrada);
       num_vars++;
       num_vars_bloco++;
       desloc++;
    }
    | IDENT 
    {
-      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      atributos_var_simples *atr_var = cria_atributos_var_simples(t_indefinido, desloc);
+      entrada_tabela_simbolos *entrada = cria_simbolo(var_simples, token, atr_var);
+      insere_simbolo(entrada);
       num_vars++;
       num_vars_bloco++;
       desloc++;

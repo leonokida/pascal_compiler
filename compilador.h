@@ -76,7 +76,7 @@ extern pilha_t *num_vars_pilha;
 extern pilha_t *ident_comando_pilha;
 
 extern char comando[50];
-extern char mensagem_erro[50];
+extern char mensagem_erro[100];
 extern char token[TAM_TOKEN];
 extern char ident[TAM_TOKEN];
 

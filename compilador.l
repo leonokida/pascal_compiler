@@ -72,6 +72,18 @@ end { simbolo = simb_end;
           return T_END;
  }
 
+write { simbolo = simb_write;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("write  ");
+          return WRITE;
+ }
+
+read { simbolo = simb_read;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("read  ");
+          return READ;
+ }
+
 label { simbolo = simb_label;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("label ");

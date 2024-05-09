@@ -292,6 +292,11 @@ fator: IDENT
       entrada_tabela_simbolos *simb =  busca(token);
       tipo t;
 
+      if (simb == NULL) {
+         sprintf(mensagem_erro, "Identificador %s não encontrado", token);
+         imprimeErro(mensagem_erro);
+      }
+
       switch(simb->cat) {
          case var_simples:
             atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;

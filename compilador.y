@@ -21,15 +21,20 @@ int nivel_lex = 0;
 int rotulo_print = 0;
 int desloc;
 
+entrada_tabela_simbolos *ident_comando;
+
 pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
 pilha_t *operacoes_pilha;
 pilha_t *expressoes_pilha;
+pilha_t *termos_pilha;
+pilha_t *fatores_pilha;
 pilha_t *num_vars_pilha;
+pilha_t *ident_comando_pilha;
 
 char comando[50];
-char mensagem_erro[50];
-char token[TAM_TOKEN];
+char mensagem_erro[100];
+char ident[TAM_TOKEN];
 
 %}
 
@@ -86,7 +91,7 @@ bloco       :
    //   geraCodigo(rotulo, "NADA");
    //   free(rotulo);
    //}
-   //comando_composto
+   comando_composto
    //{
    //   int *temp = stack_pop(num_vars_stack);
    //   num_bloco_vars = (*temp);
@@ -117,7 +122,7 @@ declara_vars: declara_vars declara_var
 declara_var : { num_vars = 0; }
    lista_id_var DOIS_PONTOS
    tipo
-   { 
+   {
       /* Aloca memória pras variáveis */
       sprintf(comando, "AMEM %d", num_vars);
       geraCodigo(NULL, comando);
@@ -135,14 +140,18 @@ tipo: INTEGER {
 
 lista_id_var: lista_id_var VIRGULA IDENT
    {
-      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      atributos_var_simples *atr_var = cria_atributos_var_simples(t_indefinido, desloc);
+      entrada_tabela_simbolos *entrada = cria_simbolo(var_simples, token, atr_var);
+      insere_simbolo(entrada);
       num_vars++;
       num_vars_bloco++;
       desloc++;
    }
    | IDENT 
    {
-      insere_simbolo(cria_simbolo(var_simples, token, cria_atributos_var_simples(t_indefinido, desloc)));
+      atributos_var_simples *atr_var = cria_atributos_var_simples(t_indefinido, desloc);
+      entrada_tabela_simbolos *entrada = cria_simbolo(var_simples, token, atr_var);
+      insere_simbolo(entrada);
       num_vars++;
       num_vars_bloco++;
       desloc++;
@@ -173,51 +182,207 @@ expressao: expressao_simples
       if (*t1 != *t2)
          imprimeErro("Comparação de tipos diferentes");
 
-      tipo tipo_bool = tipo_boolean;
+      tipo tipo_bool = t_boolean;
       insere_topo(&expressoes_pilha, &tipo_bool);
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
-
-      free(t1);
-      free(t2);
    }
 ;
 
 /* regra 27 */
-expressao_simples:
+expressao_simples: expressao_simples sinal_ou_or termo
+   {
+      tipo *t1, *t2;
+      t1 = (tipo *)remove_topo(&expressoes_pilha);
+      t2 = (tipo *)remove_topo(&termos_pilha);
+
+      if (*t1 != *t2)
+         imprimeErro("Expressão usa tipos diferentes");
+
+      insere_topo(&expressoes_pilha, t1);
+
+      operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+      sprintf(comando, "%s", gera_operacao_mepa(*op));
+      geraCodigo(NULL, comando);
+   }
+   | sinal termo
+   {
+      tipo *t1 = (tipo *)remove_topo(&termos_pilha);
+      insere_topo(&expressoes_pilha, t1);
+
+      operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
+      // inverte sinal do termo
+      if (*op == op_subt) {
+         sprintf(comando, "INVR");
+         geraCodigo(NULL, comando);
+      }
+   }
+   | termo
+   {
+      tipo *t1 = (tipo *)remove_topo(&termos_pilha);
+      insere_topo(&expressoes_pilha, t1);
+   }
+;
+
+/* usado em expressão simples */
+sinal_ou_or: sinal
+   | OR
+   {
+      operacoes op = op_or;
+      insere_topo(&operacoes_pilha, &op);
+   }
+;
+
+sinal: SOMA
+   {
+      operacoes op = op_soma;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | SUBTRAI
+   {
+      operacoes op = op_subt;
+      insere_topo(&operacoes_pilha, &op);
+   }
+;
+
+/* regra 28 */
+termo: fator
+   {
+      tipo *t1 = (tipo *)remove_topo(&fatores_pilha);
+      insere_topo(&termos_pilha, t1);
+   }
+   | termo operacao_termo fator
+   {
+      tipo *t1, *t2;
+      t1 = (tipo *)remove_topo(&termos_pilha);
+      t2 = (tipo *)remove_topo(&fatores_pilha);
+
+      if (*t1 != *t2)
+         imprimeErro("Termo usa tipos diferentes!");
+
+      insere_topo(&termos_pilha, t1);
+      operacoes *op = remove_topo(&operacoes_pilha);
+      sprintf(comando, "%s", gera_operacao_mepa(*op));
+      geraCodigo(NULL, comando);
+   }
+;
+
+operacao_termo: MUL
+   {
+      operacoes op = op_mult;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | DIV
+   {
+      operacoes op = op_div;
+      insere_topo(&operacoes_pilha, &op);
+   }
+   | AND
+   {
+      operacoes op = op_and;
+      insere_topo(&operacoes_pilha, &op);
+   }
+;
+
+/* regra 29 */
+fator: IDENT
+   {
+      entrada_tabela_simbolos *simb =  busca(token);
+      tipo t;
+
+      if (simb == NULL) {
+         sprintf(mensagem_erro, "Identificador %s não encontrado", token);
+         imprimeErro(mensagem_erro);
+      }
+
+      switch(simb->cat) {
+         case var_simples:
+            atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;
+            t = atr_var->tipo_var;
+            break;
+
+         case funcao:
+            atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+            t = atr_func->tipo_funcao;
+            break;
+
+         case param_formal:
+            atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+            t = atr_param->tipo_param;
+            break; 
+      }
+
+      strncpy(ident, token, strlen(token));
+      ident[strlen(token)] = '\0';
+
+      insere_topo(&fatores_pilha, &t);
+   }
+   var_ou_func
+   | NUMERO
+   {
+      sprintf(comando, "CRCT %s", token);
+      geraCodigo(NULL, comando);
+
+      tipo inteiro = t_integer;
+      insere_topo(&fatores_pilha, &inteiro);
+   }
+   | ABRE_PARENTESES expressao FECHA_PARENTESES
+   {
+      tipo *t = (tipo *)remove_topo(&expressoes_pilha);
+      insere_topo(&fatores_pilha, t);
+   }
+   | NOT fator
+;
+
+var_ou_func: variavel
+   | chamada_de_funcao
+;
+
+variavel:
+   {
+      entrada_tabela_simbolos *simb = busca(ident);
+      if (simb == NULL) {
+         sprintf(mensagem_erro, "Símbolo %s não encontrado", ident);
+         imprimeErro(mensagem_erro);
+      }
+      gera_carregamento(simb);
+   }
+;
+
+chamada_de_funcao:
 ;
 
 /* regra 26 */
 relacao: IGUAL
    {
-      operacoes_t op = igual;
+      operacoes op = op_igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | DIFERENTE
    {
-      operacoes_t op = diferente;
+      operacoes op = op_diferente;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR
    {
-      operacoes_t op = menor;
+      operacoes op = op_menor;
       insere_topo(&operacoes_pilha, &op);
    }
    | MENOR_OU_IGUAL
    {
-      operacoes_t op = menor_ou_igual;
+      operacoes op = op_menor_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR
    {
-      operacoes_t op = maior;
+      operacoes op = op_maior;
       insere_topo(&operacoes_pilha, &op);
    }
    | MAIOR_OU_IGUAL
    {
-      operacoes_t op = maior_ou_igual;
+      operacoes op = op_maior_ou_igual;
       insere_topo(&operacoes_pilha, &op);
    }
 ;
@@ -235,15 +400,78 @@ comando: NUMERO DOIS_PONTOS comando_sem_rotulo
    | comando_sem_rotulo
 
 /* regra 18 */
-comando_sem_rotulo:
-   //| atribuicao
-   //| chamada_procedimento
+comando_sem_rotulo: IDENT
+   {
+      ident_comando = busca(token);
+      if (ident_comando == NULL) {
+         sprintf(mensagem_erro, "Símbolo %s não encontrado", token);
+         imprimeErro(mensagem_erro);
+      }
+   }
+   trata_ident
    //| desvio
    | comando_repetitivo
    | comando_condicional
    | comando_composto
    | comando_read
    | comando_write            
+;
+
+trata_ident: atribuicao
+   | chama_proc
+;
+
+atribuicao: ATRIBUICAO
+   {
+      insere_topo(&ident_comando_pilha, ident_comando);
+   }
+   expressao
+   {
+      ident_comando = remove_topo(&ident_comando_pilha);
+      tipo *t = remove_topo(&expressoes_pilha);
+
+      switch(ident_comando->cat) {
+         case var_simples:
+            atributos_var_simples *atr_var = (atributos_var_simples *)ident_comando->atributos;
+            if (atr_var->tipo_var != *t)
+               imprimeErro("Atribuição de valor que não é do tipo da variável");
+            
+            sprintf(comando, "ARMZ %d, %d", ident_comando->nivel, atr_var->deslocamento);
+            break;
+
+         case param_formal:
+            atributos_param_formal *atr_param = (atributos_param_formal *)ident_comando->atributos;
+            if (atr_param->tipo_param != *t)
+               imprimeErro("Atribuição de valor que não é do tipo da variável");
+
+            if (atr_param->pass == pass_valor)
+               sprintf(comando, "ARMZ %d, %d", ident_comando->nivel, atr_param->deslocamento);
+            else if (atr_param->pass == pass_referencia)
+               sprintf(comando, "ARMI %d, %d", ident_comando->nivel, atr_param->deslocamento);
+            else
+               imprimeErro("Tipo de passagem do símbolo indefinido");
+            break;
+
+         case funcao:
+            atributos_funcao *atr_func = (atributos_funcao *)ident_comando->atributos;
+            if (atr_func->tipo_funcao != *t)
+               imprimeErro("Atribuição de valor que não é do tipo da variável");
+
+            sprintf(comando, "ARMZ %d, %d", ident_comando->nivel, atr_func->deslocamento);
+            break;
+
+         default:
+            sprintf(mensagem_erro, "Um valor não pode ser atribuído ao símbolo %s", ident_comando->id);
+            imprimeErro(mensagem_erro);
+            break;
+      }
+
+      geraCodigo(NULL, comando);
+      ident_comando = NULL;
+   }
+;
+
+chama_proc:
 ;
 
 /* regra 23 */
@@ -255,27 +483,28 @@ comando_repetitivo:
 		char *WhileFim = cria_rotulo(rotulo_print);
 		rotulo_print++;
 
-		insere_topo(&pilha_rotulos, WhileInicio);
-		insere_topo(&pilha_rotulos, WhileFim);
-		geraCodigo(pega_rotulo(&pilha_rotulos, 2), "NADA");
+		insere_topo(&pilha_rotulos, WhileInicio); // 1
+		insere_topo(&pilha_rotulos, WhileFim); // 0
+		geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
 	}
 	expressao DO
 	{
 		char dsvf[100];
-		sprintf(dsvf, "DSVF %s", pega_rotulo(&pilha_rotulos, 1));
+		sprintf(dsvf, "DSVF %s", pega_rotulo(pilha_rotulos, 0));
 		geraCodigo(NULL, dsvf);
 	}
 	comando_composto
 	{
 		char dsvs[100];
-		sprintf(dsvs, "DSVS %s", pega_rotulo(&pilha_rotulos, 2));
+		sprintf(dsvs, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
 		geraCodigo(NULL, dsvs);
 
 		char rot[100];
-		sprintf(rot, "%s", pega_rotulo(&pilha_rotulos, 1));
+		sprintf(rot, "%s", pega_rotulo(pilha_rotulos, 0));
 		geraCodigo(rot, "NADA");
 
-		remove_topo(&pilha_rotulos, 2);
+		remove_topo(&pilha_rotulos);
+      remove_topo(&pilha_rotulos);
 	}
 ;
 
@@ -287,19 +516,28 @@ comando_condicional:
       char * RotFim = cria_rotulo(rotulo_print);
       rotulo_print++;
 
-      insere_topo(&pilha_rotulos, RotElse);
-      insere_topo(&pilha_rotulos, RotFim);
+      insere_topo(&pilha_rotulos, RotElse); // 1
+      insere_topo(&pilha_rotulos, RotFim); // 0
    }
    bloco_if bloco_else
    {
-      free(remove_topo(&pilha_rotulos));
-      free(remove_topo(&pilha_rotulos));
+      remove_topo(&pilha_rotulos);
+      remove_topo(&pilha_rotulos);
    }
 ;
 
 bloco_if: IF expressao
    {
+      // verifica se expressão é booleana
+      tipo *t = (tipo *)remove_topo(&expressoes_pilha);
 
+      if (*t != t_boolean){
+         imprimeErro("Expressão não é booleana");
+      }
+
+      // Gera DSVF com rotulo
+      sprintf(comando, "DSVF %s", pega_rotulo(pilha_rotulos, 1));
+      geraCodigo(NULL, comando);
    }
    THEN comando_sem_rotulo
 ;
@@ -307,24 +545,25 @@ bloco_if: IF expressao
 bloco_else: ELSE
    {
       // gera desvio para fim do if
-      sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 1));
+      sprintf(comando, "DSVS %s", pega_rotulo(pilha_rotulos, 0));
       geraCodigo(NULL, comando);
 
       // gera rotulo do else
-      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
    }
    comando_sem_rotulo
    {
       // gera rotulo de fim do if
-      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
    }
    | %prec LOWER_THAN_ELSE
    {
       // gera rotulo do else
-      geraCodigo(pega_rotulo(pilha_rotulos, 0), "NADA");
+      geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
    }
 ;
 
+/* read e write */
 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
 ;
 
@@ -378,7 +617,10 @@ int main (int argc, char** argv) {
    inicializa_pilha(&num_vars_pilha);
    inicializa_pilha(&pilha_rotulos);
    inicializa_pilha(&expressoes_pilha);
+   inicializa_pilha(&termos_pilha);
+   inicializa_pilha(&fatores_pilha);
    inicializa_pilha(&operacoes_pilha);
+   inicializa_pilha(&ident_comando_pilha);
 
    yyin=fp;
    yyparse();

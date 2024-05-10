@@ -15,7 +15,7 @@ typedef enum tipo {
 
 // Tipo de passagem do símbolo se ele for parâmetro
 typedef enum tipo_passagem {
-    pass_referencia, pass_atributo, pass_indefinido
+    pass_referencia, pass_valor, pass_indefinido
 } tipo_passagem;
 
 // Entrada na tabela de símbolos
@@ -23,7 +23,7 @@ typedef struct entrada_tabela_simbolos
 {
     categoria_simbolo cat;
     int nivel;
-    char *id;
+    char id[16];
     void *atributos;
 } entrada_tabela_simbolos;
 

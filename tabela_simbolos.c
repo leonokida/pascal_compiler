@@ -61,7 +61,7 @@ entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atr
     entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
     novo_simb->cat = cat;
     novo_simb->nivel = nivel_lex;
-    novo_simb->id = id;
+    strncpy(novo_simb->id, id, 16);
     novo_simb->atributos = atributos;
     return novo_simb;
 }
@@ -108,21 +108,32 @@ void imprime_simbolo(void *simbolo) {
         printf("# Variável simples\n");
         atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;
         printf("# Tipo: %d\n", atr_var->tipo_var);
+        printf("# N.L.: %d\n", simb->nivel);
+        printf("# Desloc: %d\n", atr_var->deslocamento);
         break;
     case procedimento:
         printf("# Procedimento\n");
+        printf("# N.L.: %d\n", simb->nivel);
         break;
     case funcao:
         printf("# Função\n");
+        atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+        printf("# Tipo: %d\n", atr_func->tipo_funcao);
+        printf("# N.L.: %d\n", simb->nivel);
+        printf("# Desloc: %d\n", atr_func->deslocamento);
         break;
     case param_formal:
         printf("# Parâmetro formal\n");
+        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+        printf("# Tipo: %d\n", atr_param->tipo_param);
+        printf("# N.L.: %d\n", simb->nivel);
+        printf("# Desloc: %d\n", atr_param->deslocamento);
         break;
     default:
         printf("# Indefinido\n");
         break;
     }
-    printf("# Identificador: %s\n", simb->id);
+    printf("# Identificador: %s\n", (char *)simb->id);
     printf("###########\n");
 }
 

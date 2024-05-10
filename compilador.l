@@ -20,6 +20,8 @@
 
 #include "compilador.h"
 #include "compilador.tab.h"
+#include "pilha.h"
+#include "tabela_simbolos.h"
 
 //#define IMPRIME(STR) {};
 #define IMPRIME(STR) printf("%s    # %s \n", STR, token);
@@ -68,6 +70,18 @@ end { simbolo = simb_end;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("end  ");
           return T_END;
+ }
+
+write { simbolo = simb_write;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("write  ");
+          return WRITE;
+ }
+
+read { simbolo = simb_read;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("read  ");
+          return READ;
  }
 
 label { simbolo = simb_label;

@@ -48,31 +48,31 @@ int imprimeErro ( char* erro ) {
 
 char *gera_operacao_mepa(operacoes op) {
   switch (op) {
-        case soma:
+        case op_soma:
             return "SOMA";
-        case subt:
+        case op_subt:
             return "SUBT";
-        case div:
+        case op_div:
             return "DIVI";
-        case mult:
+        case op_mult:
             return "MULT";
-        case and:
+        case op_and:
             return "CONJ";
-        case or:
+        case op_or:
             return "DISJ";
-        case not:
+        case op_not:
             return "NEGA";
-        case menor:
+        case op_menor:
             return "CMME";
-        case maior:
+        case op_maior:
             return "CMMA";
-        case igual:
+        case op_igual:
             return "CMIG";
-        case diferente:
+        case op_diferente:
             return "CMDG";
-        case menor_ou_igual:
+        case op_menor_ou_igual:
             return "CMEG";
-        case maior_ou_igual:
+        case op_maior_ou_igual:
             return "CMAG";
         default:
             return "inválido";
@@ -91,13 +91,13 @@ void leitura(char *token) {
     switch (simbolo->cat)
     {
     case var_simples:
-        atributos_var_simples *atr = (atributos_var_simples *)simbolo->atributos;
-        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        atributos_var_simples *atr_var = (atributos_var_simples *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_var->deslocamento);
         break;
     
     case param_formal:
-        atributos_param_formal *atr = (atributos_param_formal *)simbolo->atributos;
-        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr->deslocamento);
+        atributos_param_formal *atr_param = (atributos_param_formal *)simbolo->atributos;
+        sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_param->deslocamento);
         break;
 
     default:
@@ -107,4 +107,107 @@ void leitura(char *token) {
     }
     geraCodigo(NULL, comando);
 
+}
+
+void gera_carrega_valor(entrada_tabela_simbolos *simb) {
+    switch (simb->cat) {
+        case var_simples:
+            atributos_var_simples *atr_var = simb->atributos;
+            sprintf(comando, "CRVL %d, %d", simb->nivel, atr_var->deslocamento);
+            break;
+
+        case param_formal:
+            atributos_param_formal *atr_param = simb->atributos;
+            sprintf(comando, "CRVL %d, %d", simb->nivel, atr_param->deslocamento);
+            break;
+
+        default:
+            imprimeErro("Símbolo não pôde ser carregado");
+            break;
+    }
+    geraCodigo(NULL, comando);
+}
+
+void gera_carrega_valor_indireto(entrada_tabela_simbolos *simb) {
+    atributos_param_formal *atr_param = simb->atributos;
+    sprintf(comando, "CRVI %d, %d", simb->nivel, atr_param->deslocamento);
+    geraCodigo(NULL, comando);
+}
+
+void gera_carregamento(entrada_tabela_simbolos *simb) {
+    // falta cobrir casos de dentro de função
+    switch (simb->cat) {
+        case var_simples:
+            gera_carrega_valor(simb);
+            break;
+
+        case param_formal:
+            atributos_param_formal *atr_param = simb->atributos;
+            if (atr_param->pass == pass_referencia)
+                gera_carrega_valor_indireto(simb);
+            else
+                gera_carrega_valor(simb);
+            break;
+
+        case funcao:
+            atributos_funcao *atr_func = simb->atributos;
+            geraCodigo(NULL, "AMEM 1");
+            sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+            geraCodigo(NULL, comando);
+            break;
+
+        default:
+            sprintf(mensagem_erro, "Parâmetro %s é inválido", token);
+            imprimeErro(mensagem_erro);
+            break;
+    }
+}
+
+
+void imprime_operacoes(void *op) {
+    printf("ELEM: ");
+    operacoes *oper = (operacoes *)op;
+    switch (*oper) {
+        case op_soma:
+            printf("SOMA\n");
+            break;
+        case op_subt:
+            printf("SUBT\n");
+            break;
+        case op_div:
+            printf("DIVI\n");
+            break;
+        case op_mult:
+            printf("MULT\n");
+            break;
+        case op_and:
+            printf("CONJ\n");
+            break;
+        case op_or:
+            printf("DISJ\n");
+            break;
+        case op_not:
+            printf("NEGA\n");
+            break;
+        case op_menor:
+            printf("CMME\n");
+            break;
+        case op_maior:
+            printf("CMMA\n");
+            break;
+        case op_igual:
+            printf("CMIG\n");
+            break;
+        case op_diferente:
+            printf("CMDG\n");
+            break;
+        case op_menor_ou_igual:
+            printf("CMEG\n");
+            break;
+        case op_maior_ou_igual:
+            printf("CMAG\n");
+            break;
+        default:
+            printf("inválido\n");
+    }
 }

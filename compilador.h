@@ -11,6 +11,9 @@
  *
  * ------------------------------------------------------------------- */
 
+#include "pilha.h"
+#include "tabela_simbolos.h"
+
 #define TAM_TOKEN 16
 
 typedef enum simbolos {
@@ -24,23 +27,23 @@ typedef enum simbolos {
   simb_menor_ou_igual, simb_menor, simb_maior_ou_igual, 
   simb_or, simb_and, simb_not, simb_soma, simb_subtrai, 
   simb_div, simb_mul, simb_mod, simb_integer, simb_longint,
-  simb_real, simb_char, simb_boolean
+  simb_real, simb_char, simb_boolean, simb_read, simb_write
 } simbolos;
 
 typedef enum operacoes {
-    soma,
-    subt,
-    div,
-    mult,
-    and,
-    or,
-    not,
-    menor,
-    maior,
-    igual,
-    diferente,
-    menor_ou_igual,
-    maior_ou_igual
+    op_soma,
+    op_subt,
+    op_div,
+    op_mult,
+    op_and,
+    op_or,
+    op_not,
+    op_menor,
+    op_maior,
+    op_igual,
+    op_diferente,
+    op_menor_ou_igual,
+    op_maior_ou_igual
 } operacoes;
 
 
@@ -57,18 +60,25 @@ extern int nl;
 extern int num_vars;
 extern int num_vars_bloco;
 
-extern int nivel_lex = 0;
-extern int rotulo_print = 0;
+extern int nivel_lex;
+extern int rotulo_print;
 extern int desloc;
 
+extern entrada_tabela_simbolos *ident_comando;
+
+extern pilha_t *tab_simbolos;
 extern pilha_t *pilha_rotulos;
 extern pilha_t *operacoes_pilha;
 extern pilha_t *expressoes_pilha;
+extern pilha_t *termos_pilha;
+extern pilha_t *fatores_pilha;
 extern pilha_t *num_vars_pilha;
+extern pilha_t *ident_comando_pilha;
 
-extern char ident[50];
 extern char comando[50];
-extern char mensagem_erro[50];
+extern char mensagem_erro[100];
+extern char token[TAM_TOKEN];
+extern char ident[TAM_TOKEN];
 
 
 /* -------------------------------------------------------------------
@@ -79,6 +89,8 @@ void geraCodigo (char*, char*);
 int imprimeErro(char *erro);
 char *gera_operacao_mepa(operacoes op);
 void leitura(char *token);
+void gera_carregamento(entrada_tabela_simbolos *simb);
+void imprime_operacoes(void *op);
 
 int yylex();
 void yyerror(const char *s);

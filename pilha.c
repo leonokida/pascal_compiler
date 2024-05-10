@@ -1,6 +1,8 @@
 #include "pilha.h"
+#include "tabela_simbolos.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int inicializa_pilha(pilha_t **pilha) {
     *pilha = NULL;
@@ -49,7 +51,11 @@ int insere_topo(pilha_t **pilha, void *elem) {
 
     // Cria novo elemento da pilha, contendo o dado de qualquer tipo
     pilha_t *novo_elem = malloc(sizeof(pilha_t));
-    novo_elem->dado = elem;
+
+    void *dado = malloc(10*sizeof(int));
+    memcpy(dado, elem, 10*sizeof(int));
+
+    novo_elem->dado = dado;
 
     // Se a pilha estiver vazia, o novo elemento será o topo
     if (*pilha == NULL) {

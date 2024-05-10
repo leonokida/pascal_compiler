@@ -165,6 +165,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
 
 
 void imprime_operacoes(void *op) {
+    printf("ELEM: ");
     operacoes *oper = (operacoes *)op;
     switch (*oper) {
         case op_soma:

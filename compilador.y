@@ -75,37 +75,37 @@ bloco       :
    }
    parte_declara_vars
    //{
-      //insere_topo(&num_vars_pilha, &num_bloco_vars);
+      insere_topo(&num_vars_pilha, &num_bloco_vars);
 
-      //insere_topo(&rotulos_pilha, next_rot());
+      insere_topo(&rotulos_pilha, next_rot());
 
-      // Gera DSVS com rotulo
-      //char *rotulo = stack_item(rotulos, rotulos->top);
-      //sprintf(comando, "DSVS %s", rotulo);
-      //geraCodigo(NULL, comando);
+      Gera DSVS com rotulo
+      char *rotulo = stack_item(rotulos, rotulos->top);
+      sprintf(comando, "DSVS %s", rotulo);
+      geraCodigo(NULL, comando);
    //}
-   //parte_declara_subrotinas
-   //{
-   //   // Gera NADA com rotulo
-   //   char *rotulo = stack_pop(rotulos);
-   //   geraCodigo(rotulo, "NADA");
-   //   free(rotulo);
-   //}
+   parte_declara_subrotinas
+   {
+      // Gera NADA com rotulo
+      char *rotulo = stack_pop(rotulos);
+      geraCodigo(rotulo, "NADA");
+      free(rotulo);
+   }
    comando_composto
-   //{
-   //   int *temp = stack_pop(num_vars_stack);
-   //   num_bloco_vars = (*temp);
-   //   free(temp);
+   {
+      int *temp = stack_pop(num_vars_stack);
+      num_bloco_vars = (*temp);
+      free(temp);
 
-   //   eliminaNivelLex(nivelLex+1);
+      eliminaNivelLex(nivelLex+1);
 
-   //   if (num_bloco_vars > 0) {
-   //      eliminaTS(num_bloco_vars);
-   //      sprintf(comando, "DMEM %d", num_bloco_vars);
-   //      geraCodigo(NULL, comando);
-   //   }
+      if (num_bloco_vars > 0) {
+         eliminaTS(num_bloco_vars);
+         sprintf(comando, "DMEM %d", num_bloco_vars);
+         geraCodigo(NULL, comando);
+      }
 
-   //}
+   }
 ;
 
 /* regras 8 e 9 */
@@ -164,6 +164,26 @@ lista_idents: lista_idents VIRGULA lista_aux
 
 lista_aux: IDENT
    | NUMERO
+;
+
+/* REGRA 12 */
+declara_proc: PROCEDURE IDENT
+            {
+               char *rotulo;
+
+               nivelLex++;
+
+               // Adiciona procedimento à tabela de simbolos
+               if (busca(token) == -1) {
+                  insere_topo(rotulos, next_rot());
+                  rotulo = obter_item_pilha(rotulos, rotulos->top);
+                  insere_simbolo(token, cat_procedimento,
+                     cria_atributos_procedimento(rotulo));
+               }
+
+            }
+            param_formais
+            PONTO_E_VIRGULA
 ;
 
 /* regra 24 */

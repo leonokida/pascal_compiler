@@ -43,6 +43,16 @@ void atualiza_tipo(tipo t, int n) {
     }
 }
 
+void atualiza_tipo_funcao(entrada_tabela_simbolos *simb, tipo t) {
+    if (simb->cat != funcao) {
+        fprintf(stderr, "ERRO - atualiza_tipo_funcao() - símbolo não é função\n");
+        exit(-1);
+    }
+    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+    atr_func->tipo_funcao = t;
+}
+
+
 void remove_nivel_lexico(int nL) {
     if(tab_simbolos == NULL) 
         return;
@@ -135,6 +145,18 @@ void imprime_simbolo(void *simbolo) {
     }
     printf("# Identificador: %s\n", (char *)simb->id);
     printf("###########\n");
+}
+
+entrada_tabela_simbolos *obter_ultimo_simbolo_categoria(categoria_simbolo cat) {
+    pilha_t *iter = tab_simbolos;
+    while (iter != NULL) {
+        entrada_tabela_simbolos *item = (entrada_tabela_simbolos *) iter->dado;
+        if (item->cat == cat) {
+            return item;
+        }
+        iter = iter->prox;
+    }
+    return NULL;
 }
 
 void imprime_tabela_simbolos() {

@@ -75,6 +75,9 @@ entrada_tabela_simbolos *busca(char *identificador);
 // Atualiza o tipo das últimas n entradas na tabela de símbolos
 void atualiza_tipo(tipo t, int n);
 
+// Atualiza o tipo especificamente de funções
+void atualiza_tipo_funcao(entrada_tabela_simbolos *simb, tipo t);
+
 // Cria o símbolo para ser inserido na tabela ("atributos" deve conter uma struct de atributos criada previamente)
 entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos);
 
@@ -89,6 +92,9 @@ atributos_funcao *cria_atributos_funcao(char *rotulo, int num_params, tipo tipo_
 
 // Cria a struct de atributos de parâmetro formal para inserir na struct do símbolo
 atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass, int deslocamento);
+
+// Obtem o ultimo simbolo
+entrada_tabela_simbolos *obter_ultimo_simbolo_categoria(categoria_simbolo cat);
 
 // Função para imprimir a tabela de símbolos
 void imprime_tabela_simbolos();

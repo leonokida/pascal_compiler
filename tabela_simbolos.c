@@ -1,18 +1,39 @@
 #include "tabela_simbolos.h"
+#include "compilador.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // Variáveis globais da tabela de símbolos e do nível léxico
 extern pilha_t *tab_simbolos;
-extern int nivel_lex;
 
 void inicializa_tabela_simbolos() {
     inicializa_pilha(&tab_simbolos);
 }
 
 int insere_simbolo(entrada_tabela_simbolos * simbolo) {
-    return insere_topo(&tab_simbolos, simbolo);
+
+    size_t tamanho;
+    switch (simbolo->cat)
+    {
+    case var_simples:
+        tamanho = sizeof(atributos_var_simples);
+        break;
+    
+    case procedimento:
+        tamanho = sizeof(atributos_procedimento);
+        break;
+    
+    case funcao:
+        tamanho = sizeof(atributos_funcao);
+        break;
+    
+    default:
+        tamanho = sizeof(atributos_param_formal);
+        break;
+    }
+
+    return insere_topo(&tab_simbolos, simbolo, sizeof(entrada_tabela_simbolos) + tamanho);
 }
 
 void retira_simbolos(int n) {
@@ -71,7 +92,7 @@ entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atr
     entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
     novo_simb->cat = cat;
     novo_simb->nivel = nivel_lex;
-    strncpy(novo_simb->id, id, 16);
+    strncpy(novo_simb->id, id, TAM_TOKEN);
     novo_simb->atributos = atributos;
     return novo_simb;
 }
@@ -83,30 +104,91 @@ atributos_var_simples *cria_atributos_var_simples(tipo tipo_var, int deslocament
     return novo_atr;
 }
 
-atributos_procedimento *cria_atributos_procedimento(char *rotulo, int num_params, entrada_tabela_simbolos **params) {
+atributos_procedimento *cria_atributos_procedimento(char *rotulo) {
     atributos_procedimento *novo_atr = (atributos_procedimento *)malloc(sizeof(atributos_procedimento));
-    novo_atr->rotulo = rotulo;
-    novo_atr->num_params = num_params;
-    novo_atr->params = params;
+    strncpy(novo_atr->rotulo, rotulo, 10);
     return novo_atr;
 }
 
-atributos_funcao *cria_atributos_funcao(char *rotulo, int num_params, tipo tipo_funcao, int deslocamento, entrada_tabela_simbolos **params) {
+atributos_funcao *cria_atributos_funcao(char *rotulo) {
     atributos_funcao *novo_atr = (atributos_funcao *)malloc(sizeof(atributos_funcao));
-    novo_atr->rotulo = rotulo;
-    novo_atr->num_params = num_params;
-    novo_atr->tipo_funcao = tipo_funcao;
-    novo_atr->deslocamento = deslocamento;
-    novo_atr->params = params;
+    strncpy(novo_atr->rotulo, rotulo, 10);
     return novo_atr;
 }
 
-atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass, int deslocamento) {
+atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass) {
     atributos_param_formal *novo_atr = (atributos_param_formal *)malloc(sizeof(atributos_param_formal));
     novo_atr->tipo_param = tipo_param;
     novo_atr->pass = pass;
-    novo_atr->deslocamento = deslocamento;
     return novo_atr;
+}
+
+void atualiza_tipo_param(tipo t, int n) {
+    pilha_t *iter = tab_simbolos;
+    int i = 0;
+    while ((iter != NULL) || (i<n)) {
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
+        atributos_param_formal *atributo_atual = (atributos_param_formal *)simbolo_atual->atributos;
+        atributo_atual->tipo_param = t;
+        iter = iter->prox;
+        i++;
+    }
+}
+
+void atualiza_tipo_passagem(tipo_passagem pass, int n) {
+    pilha_t *iter = tab_simbolos;
+    int i = 0;
+    while ((iter != NULL) || (i<n)) {
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
+        atributos_param_formal *atributo_atual = (atributos_param_formal *)simbolo_atual->atributos;
+        atributo_atual->pass = pass;
+        iter = iter->prox;
+        i++;
+    }
+}
+
+void trata_parametros(int deslocamento) {
+    if (deslocamento == 0)
+        return;
+
+    int novo_desloc = -4;
+
+    entrada_tabela_simbolos *procedimento_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+    if (procedimento_simb->cat == funcao) {
+        atributos_funcao *atr_func = (atributos_funcao *)procedimento_simb->atributos;
+        atr_func->num_params = deslocamento;
+        atr_func->params = malloc(atr_func->num_params * sizeof(entrada_tabela_simbolos *));
+
+        // atualiza deslocamento dos parametros e adiciona referencia a eles no simbolo do procedimento
+        for (int i = 0; i < deslocamento; i++) {
+            entrada_tabela_simbolos *param_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+            atributos_param_formal *atr_param = (atributos_param_formal *)param_simb->atributos;
+            atr_param->deslocamento = novo_desloc;
+            atr_func->params[i] = param_simb;
+            novo_desloc--;
+        }
+
+        // atualiza deslocamento da função
+        atr_func->deslocamento = novo_desloc;
+    }
+    else if (procedimento_simb->cat == procedimento) {
+        atributos_procedimento *atr_proc = (atributos_procedimento *)procedimento_simb->atributos;
+        atr_proc->num_params = deslocamento;
+        atr_proc->params = malloc(atr_proc->num_params * sizeof(entrada_tabela_simbolos *));
+
+        // atualiza deslocamento dos parametros e adiciona referencia a eles no simbolo do procedimento
+        for (int i = 0; i < deslocamento; i++) {
+            entrada_tabela_simbolos *param_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+            atributos_param_formal *atr_param = (atributos_param_formal *)param_simb->atributos;
+            atr_param->deslocamento = novo_desloc;
+            atr_proc->params[i] = param_simb;
+            novo_desloc--;
+        }
+    }
+    else {
+        imprimeErro("Erro ao tratar parâmetros");
+    }
+    
 }
 
 void imprime_simbolo(void *simbolo) {

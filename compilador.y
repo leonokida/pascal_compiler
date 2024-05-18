@@ -20,9 +20,10 @@ int num_vars_bloco;
 int nivel_lex = 0;
 int rotulo_print = 0;
 int desloc;
-int num_params
+int num_params;
 
 entrada_tabela_simbolos *ident_comando;
+entrada_tabela_simbolos *procedimento_atual;
 
 pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
@@ -32,7 +33,6 @@ pilha_t *termos_pilha;
 pilha_t *fatores_pilha;
 pilha_t *num_vars_pilha;
 pilha_t *ident_comando_pilha;
-pilha_t *rotulos;
 
 char comando[50];
 char mensagem_erro[100];
@@ -76,34 +76,34 @@ bloco       :
       num_vars_bloco = 0;
    }
    parte_declara_vars
-   //{
-      insere_topo(&num_vars_pilha, &num_bloco_vars);
+   {
+      insere_topo(&num_vars_pilha, &num_vars_bloco, sizeof(int));
 
-      insere_topo(&rotulos_pilha, next_rot());
+      char *rotulo_main = cria_rotulo(rotulo_print);
+		rotulo_print++;
+      insere_topo(&pilha_rotulos, rotulo_main, 10*sizeof(char));
 
-      Gera DSVS com rotulo
-      char *rotulo = stack_item(rotulos, rotulos->top);
-      sprintf(comando, "DSVS %s", rotulo);
+      //Gera DSVS com rotulo
+      sprintf(comando, "DSVS %s", rotulo_main);
       geraCodigo(NULL, comando);
-   //}
+   }
    parte_declara_subrotinas
    {
       // Gera NADA com rotulo
-      char *rotulo = stack_pop(rotulos);
+      char *rotulo = pega_rotulo(pilha_rotulos, 0);
       geraCodigo(rotulo, "NADA");
-      free(rotulo);
    }
    comando_composto
    {
-      int *temp = stack_pop(num_vars_stack);
-      num_bloco_vars = (*temp);
+      int *temp = remove_topo(&num_vars_pilha);
+      num_vars_bloco = (*temp);
       free(temp);
 
-      eliminaNivelLex(nivelLex+1);
+      remove_nivel_lexico(nivel_lex+1);
 
-      if (num_bloco_vars > 0) {
-         eliminaTS(num_bloco_vars);
-         sprintf(comando, "DMEM %d", num_bloco_vars);
+      if (num_vars_bloco > 0) {
+         retira_simbolos(num_vars_bloco);
+         sprintf(comando, "DMEM %d", num_vars_bloco);
          geraCodigo(NULL, comando);
       }
 
@@ -168,117 +168,151 @@ lista_aux: IDENT
    | NUMERO
 ;
 
-/* REGRA 12 */
-declara_proc: PROCEDURE IDENT
-            {
-               char *rotulo;
-
-               nivelLex++;
-
-               // Adiciona procedimento à tabela de simbolos
-               if (busca(token) == -1) {
-                  insere_topo(rotulos, next_rot());
-                  rotulo = obter_item_pilha(rotulos, rotulos->top);
-                  insere_simbolo(token, cat_procedimento,
-                     cria_atributos_procedimento(rotulo));
-               }
-
-            }
-            param_formais
-            PONTO_E_VIRGULA declara_proc_extra
+/* regra 11 */
+parte_declara_subrotinas: parte_declara_subrotinas declara_procedimento
+   | parte_declara_subrotinas declara_funcao
+   | declara_funcao
+   | declara_procedimento
 ;
 
-/* REGRA 12 - extra */
-declara_proc_extra: FORWARD PONTO_E_VIRGULA { nivelLex--; }
-            | {
-               char *rotulo;
+/* REGRA 12 */
+declara_procedimento: PROCEDURE IDENT
+   {
+      char *rotulo;
+      nivel_lex++;
 
-               // Gera ENPR k com rotulo
-               rotulo = obter_item_pilha(rotulos, rotulos->top);
-               sprintf(comando, "ENPR %d", nivelLex);
-               geraCodigo(rotulo, comando);
+      // Adiciona procedimento à tabela de simbolos
+      if (busca(token) == NULL) {
+         char *rotulo_proc = cria_rotulo(rotulo_print);
+         rotulo_print++;
+         insere_topo(&pilha_rotulos, rotulo_proc, 10*sizeof(char));
+         entrada_tabela_simbolos *novo_proc = cria_simbolo(procedimento, token, cria_atributos_procedimento(rotulo_proc));
+         insere_simbolo(novo_proc);
+      }
 
-            } bloco PONTO_E_VIRGULA
-            {
-               char *rotulo;
-
-               entrada_tabela_simbolos *simb = obter_ultimo_simbolo_categoria(cat_procedimento);
-               atributos_procedimento *atrProc = simb->atributos;
-
-               // Gera RTPR
-               sprintf(comando, "RTPR %d, %d", nivelLex, atrProc->num_params);
-               geraCodigo(NULL, comando);
-
-               retira_simbolos(atrProc->num_params);
-
-               nivelLex--;
-
-               rotulo = remove_topo(rotulos);
-               free(rotulo);
-            }
+   }
+   parametros_formais
+   PONTO_E_VIRGULA finaliza_procedimento
 ;
 
 /* REGRA 13 */
-declara_func: FUNCTION IDENT
-            {
-               char *rotulo;
+declara_funcao: FUNCTION IDENT
+   {
+      char *rotulo;
+      nivel_lex++;
 
-               nivelLex++;
-
-               // Se não existe, adiciona função à tabela de simbolos
-               if (busca(token) == -1) {
-                  insere_simbolo(rotulos, next_rot());
-                  rotulo = obter_item_pilha(rotulos, rotulos->top);
-                  insere_simbolo(token, cat_funcao, cria_atributos_funcao(rotulo));
-               }
-
-            }
-            param_formais DOIS_PONTOS tipo
-            {
-               switch (simbolo) {
-                  case simb_integer:
-                     atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(cat_funcao), tipo_integer);
-                     break;
-                  case simb_boolean:
-                     atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(cat_funcao), tipo_boolean);
-                     break;
-                  default:
-                     break;
-               }
-            }
-            PONTO_E_VIRGULA declara_func_extra
+      // Adiciona procedimento à tabela de simbolos
+      if (busca(token) == NULL) {
+         char *rotulo_proc = cria_rotulo(rotulo_print);
+         rotulo_print++;
+         insere_topo(&pilha_rotulos, rotulo_proc, 10*sizeof(char));
+         entrada_tabela_simbolos *novo_proc = cria_simbolo(funcao, token, cria_atributos_funcao(rotulo_proc));
+         insere_simbolo(novo_proc);
+      }
+   }
+   parametros_formais DOIS_PONTOS tipo_func
+   PONTO_E_VIRGULA finaliza_funcao
 ;
 
-/* REGRA 13 - extra */
-declara_func_extra: FORWARD PONTO_E_VIRGULA { nivelLex--; }
-            | {
-               char *rotulo;
-
-               // Gera ENPR k com rotulo
-               rotulo = obter_item_pilha(rotulos, rotulos->top);
-               sprintf(comando, "ENPR %d", nivelLex);
-               geraCodigo(rotulo, comando);
-
-            } bloco PONTO_E_VIRGULA
-            {
-               char *rotulo;
-
-               entrada_tabela_simbolos *simb = obter_ultimo_simbolo_categoria(cat_funcao);
-               atributos_funcao *atrFuncao = simb->atributos;
-
-               // Gera RTPR
-               sprintf(comando, "RTPR %d, %d", nivelLex, atributos_funcao->num_params);
-               geraCodigo(NULL, comando);
-
-               retira_simbolos(atrFuncao->num_params);
-
-               nivelLex--;
-
-               rotulo = remove_topo(rotulos);
-               free(rotulo);
-            }
+tipo_func: INTEGER {
+      atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(funcao), t_integer);
+   }
+   | BOOLEAN {
+      atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(funcao), t_boolean);
+   }
 ;
 
+/* regra 14 */
+parametros_formais:
+   | {
+      desloc = 0;
+   }
+   ABRE_PARENTESES secao_parametros_formais FECHA_PARENTESES
+   {
+      trata_parametros(desloc);
+   }
+;
+
+/* regra 15 */
+secao_parametros_formais:
+   | PONTO_E_VIRGULA secao_parametros_formais;
+   | {
+      num_vars = 0;
+   }
+   VAR lista_id_param DOIS_PONTOS tipo_param
+   {
+      atualiza_tipo_passagem(pass_referencia, num_vars);
+   }
+   secao_parametros_formais
+   | {
+      num_vars = 0;
+   }
+   lista_id_param DOIS_PONTOS tipo_param
+   {
+      atualiza_tipo_passagem(pass_valor, num_vars);
+   }
+   secao_parametros_formais
+;
+
+lista_id_param: lista_id_param VIRGULA IDENT
+   {
+      atributos_param_formal *atr_param = cria_atributos_param_formal(t_indefinido, pass_indefinido);
+      entrada_tabela_simbolos *entrada = cria_simbolo(param_formal, token, atr_param);
+      insere_simbolo(entrada);
+      num_vars++;
+      desloc++;
+   }
+   | IDENT 
+   {
+      atributos_param_formal *atr_param = cria_atributos_param_formal(t_indefinido, pass_indefinido);
+      entrada_tabela_simbolos *entrada = cria_simbolo(param_formal, token, atr_param);
+      insere_simbolo(entrada);
+      num_vars++;
+      desloc++;
+   }
+;
+
+tipo_param: INTEGER {
+      atualiza_tipo_param(t_integer, num_vars);
+   }
+   | BOOLEAN {
+      atualiza_tipo_param(t_boolean, num_vars);
+   }
+;
+
+finaliza_procedimento: {
+      char *rotulo = pega_rotulo(pilha_rotulos, 0);
+      sprintf(comando, "ENPR %d", nivel_lex);
+      geraCodigo(rotulo, comando);
+   }
+   comando_composto PONTO_E_VIRGULA
+   {
+      entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(procedimento);
+      atributos_procedimento *atr_proc = (atributos_procedimento *)proc_simb->atributos;
+      sprintf(comando, "RTPR %d, %d", nivel_lex, atr_proc->num_params);
+      geraCodigo(NULL, comando);
+      retira_simbolos(atr_proc->num_params);
+      nivel_lex--;
+      remove_topo(&pilha_rotulos);
+   }
+;
+
+finaliza_funcao: {
+      char *rotulo = pega_rotulo(pilha_rotulos, 0);
+      sprintf(comando, "ENPR %d", nivel_lex);
+      geraCodigo(rotulo, comando);
+   }
+   comando_composto PONTO_E_VIRGULA
+   {
+      entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(funcao);
+      atributos_funcao *atr_func = (atributos_funcao *)proc_simb->atributos;
+      sprintf(comando, "RTPR %d, %d", nivel_lex, atr_func->num_params);
+      geraCodigo(NULL, comando);
+      retira_simbolos(atr_func->num_params);
+      nivel_lex--;
+      remove_topo(&pilha_rotulos);
+   }
+;
 
 /* regra 24 */
 lista_expressoes: lista_expressoes VIRGULA expressao
@@ -297,7 +331,7 @@ expressao: expressao_simples
          imprimeErro("Comparação de tipos diferentes");
 
       tipo tipo_bool = t_boolean;
-      insere_topo(&expressoes_pilha, &tipo_bool);
+      insere_topo(&expressoes_pilha, &tipo_bool, sizeof(tipo));
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
@@ -315,7 +349,7 @@ expressao_simples: expressao_simples sinal_ou_or termo
       if (*t1 != *t2)
          imprimeErro("Expressão usa tipos diferentes");
 
-      insere_topo(&expressoes_pilha, t1);
+      insere_topo(&expressoes_pilha, t1, sizeof(tipo));
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
@@ -324,7 +358,7 @@ expressao_simples: expressao_simples sinal_ou_or termo
    | sinal termo
    {
       tipo *t1 = (tipo *)remove_topo(&termos_pilha);
-      insere_topo(&expressoes_pilha, t1);
+      insere_topo(&expressoes_pilha, t1, sizeof(tipo));
 
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       // inverte sinal do termo
@@ -336,7 +370,7 @@ expressao_simples: expressao_simples sinal_ou_or termo
    | termo
    {
       tipo *t1 = (tipo *)remove_topo(&termos_pilha);
-      insere_topo(&expressoes_pilha, t1);
+      insere_topo(&expressoes_pilha, t1, sizeof(tipo));
    }
 ;
 
@@ -345,19 +379,19 @@ sinal_ou_or: sinal
    | OR
    {
       operacoes op = op_or;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
 ;
 
 sinal: SOMA
    {
       operacoes op = op_soma;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | SUBTRAI
    {
       operacoes op = op_subt;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
 ;
 
@@ -365,7 +399,7 @@ sinal: SOMA
 termo: fator
    {
       tipo *t1 = (tipo *)remove_topo(&fatores_pilha);
-      insere_topo(&termos_pilha, t1);
+      insere_topo(&termos_pilha, t1, sizeof(tipo));
    }
    | termo operacao_termo fator
    {
@@ -376,7 +410,7 @@ termo: fator
       if (*t1 != *t2)
          imprimeErro("Termo usa tipos diferentes!");
 
-      insere_topo(&termos_pilha, t1);
+      insere_topo(&termos_pilha, t1, sizeof(tipo));
       operacoes *op = remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
@@ -386,17 +420,17 @@ termo: fator
 operacao_termo: MUL
    {
       operacoes op = op_mult;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | DIV
    {
       operacoes op = op_div;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | AND
    {
       operacoes op = op_and;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
 ;
 
@@ -431,7 +465,7 @@ fator: IDENT
       strncpy(ident, token, strlen(token));
       ident[strlen(token)] = '\0';
 
-      insere_topo(&fatores_pilha, &t);
+      insere_topo(&fatores_pilha, &t, sizeof(tipo));
    }
    var_ou_func
    | NUMERO
@@ -440,12 +474,12 @@ fator: IDENT
       geraCodigo(NULL, comando);
 
       tipo inteiro = t_integer;
-      insere_topo(&fatores_pilha, &inteiro);
+      insere_topo(&fatores_pilha, &inteiro, sizeof(tipo));
    }
    | ABRE_PARENTESES expressao FECHA_PARENTESES
    {
       tipo *t = (tipo *)remove_topo(&expressoes_pilha);
-      insere_topo(&fatores_pilha, t);
+      insere_topo(&fatores_pilha, t, sizeof(tipo));
    }
    | NOT fator
 ;
@@ -472,32 +506,32 @@ chamada_de_funcao:
 relacao: IGUAL
    {
       operacoes op = op_igual;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | DIFERENTE
    {
       operacoes op = op_diferente;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | MENOR
    {
       operacoes op = op_menor;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | MENOR_OU_IGUAL
    {
       operacoes op = op_menor_ou_igual;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | MAIOR
    {
       operacoes op = op_maior;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
    | MAIOR_OU_IGUAL
    {
       operacoes op = op_maior_ou_igual;
-      insere_topo(&operacoes_pilha, &op);
+      insere_topo(&operacoes_pilha, &op, sizeof(operacoes));
    }
 ;
 
@@ -523,7 +557,6 @@ comando_sem_rotulo: IDENT
       }
    }
    trata_ident
-   //| desvio
    | comando_repetitivo
    | comando_condicional
    | comando_composto
@@ -537,7 +570,7 @@ trata_ident: atribuicao
 
 atribuicao: ATRIBUICAO
    {
-      insere_topo(&ident_comando_pilha, ident_comando);
+      insere_topo(&ident_comando_pilha, ident_comando, sizeof(entrada_tabela_simbolos) + sizeof(atributos_var_simples));
    }
    expressao
    {
@@ -597,8 +630,8 @@ comando_repetitivo:
 		char *WhileFim = cria_rotulo(rotulo_print);
 		rotulo_print++;
 
-		insere_topo(&pilha_rotulos, WhileInicio); // 1
-		insere_topo(&pilha_rotulos, WhileFim); // 0
+		insere_topo(&pilha_rotulos, WhileInicio, 10*sizeof(char)); // 1
+		insere_topo(&pilha_rotulos, WhileFim, 10*sizeof(char)); // 0
 		geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
 	}
 	expressao DO
@@ -630,8 +663,8 @@ comando_condicional:
       char * RotFim = cria_rotulo(rotulo_print);
       rotulo_print++;
 
-      insere_topo(&pilha_rotulos, RotElse); // 1
-      insere_topo(&pilha_rotulos, RotFim); // 0
+      insere_topo(&pilha_rotulos, RotElse, 10*sizeof(char)); // 1
+      insere_topo(&pilha_rotulos, RotFim, 10*sizeof(char)); // 0
    }
    bloco_if bloco_else
    {

@@ -20,7 +20,7 @@ int tamanho_pilha(pilha_t *pilha);
 void imprime_pilha(pilha_t *pilha, void imprime_func(void*));
 
 // Insere um novo elemento no topo da pilha (push)
-int insere_topo(pilha_t **pilha, void *elem);
+int insere_topo(pilha_t **pilha, void *elem, size_t tamanho);
 
 // Remove e retorna o topo da pilha (pop) e libera memória
 void *remove_topo(pilha_t **pilha);

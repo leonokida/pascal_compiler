@@ -15,7 +15,7 @@ int tamanho_pilha(pilha_t *pilha) {
         return 0;
     }
     // Contador para o tamanho da pilha
-    int cont = 1;
+    int cont = 0;
     pilha_t *itr = pilha;
     // Percorre a pilha incrementando o contador
     while (itr != NULL) {
@@ -42,7 +42,7 @@ void imprime_pilha(pilha_t *pilha, void (*imprime_func)(void*)) {
     }
 }
 
-int insere_topo(pilha_t **pilha, void *elem) {
+int insere_topo(pilha_t **pilha, void *elem, size_t tamanho) {
     // Pilha não existe
     if (pilha == NULL) {
         printf("Pilha não existe.\n");
@@ -52,8 +52,8 @@ int insere_topo(pilha_t **pilha, void *elem) {
     // Cria novo elemento da pilha, contendo o dado de qualquer tipo
     pilha_t *novo_elem = malloc(sizeof(pilha_t));
 
-    void *dado = malloc(10*sizeof(int));
-    memcpy(dado, elem, 10*sizeof(int));
+    void *dado = malloc(tamanho);
+    memcpy(dado, elem, tamanho);
 
     novo_elem->dado = dado;
 

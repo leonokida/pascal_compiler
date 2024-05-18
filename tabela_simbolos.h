@@ -37,7 +37,7 @@ typedef struct atributos_var_simples
 // Atributos de procedimento
 typedef struct atributos_procedimento
 {
-    char *rotulo;
+    char rotulo[10];
     int num_params;
     entrada_tabela_simbolos **params;
 } atributos_procedimento;
@@ -45,7 +45,7 @@ typedef struct atributos_procedimento
 // Atributos de função
 typedef struct atributos_funcao
 {
-    char *rotulo;
+    char rotulo[10];
     int num_params;
     tipo tipo_funcao;
     int deslocamento;
@@ -69,11 +69,15 @@ int insere_simbolo(entrada_tabela_simbolos * simbolo);
 // Retira os n últimos símbolos inseridos na tabela
 void retira_simbolos(int n);
 
+void remove_nivel_lexico(int nL);
+
 // Busca e retorna o símbolo com o identificador buscado; retorna Null se não encontra
 entrada_tabela_simbolos *busca(char *identificador);
 
 // Atualiza o tipo das últimas n entradas na tabela de símbolos
 void atualiza_tipo(tipo t, int n);
+
+void atualiza_tipo_param(tipo t, int n);
 
 // Atualiza o tipo especificamente de funções
 void atualiza_tipo_funcao(entrada_tabela_simbolos *simb, tipo t);
@@ -85,16 +89,22 @@ entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atr
 atributos_var_simples *cria_atributos_var_simples(tipo tipo_var, int deslocamento);
 
 // Cria a struct de atributos de procedimento para inserir na struct do símbolo
-atributos_procedimento *cria_atributos_procedimento(char *rotulo, int num_params, entrada_tabela_simbolos **params);
+atributos_procedimento *cria_atributos_procedimento(char *rotulo);
 
 // Cria a struct de atributos de função para inserir na struct do símbolo
-atributos_funcao *cria_atributos_funcao(char *rotulo, int num_params, tipo tipo_funcao, int deslocamento, entrada_tabela_simbolos **params);
+atributos_funcao *cria_atributos_funcao(char *rotulo);
 
 // Cria a struct de atributos de parâmetro formal para inserir na struct do símbolo
-atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass, int deslocamento);
+atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass);
+
+// Atualiza o tipo de passagem das últimas N entradas da tabela
+void atualiza_tipo_passagem(tipo_passagem pass, int n);
 
 // Obtem o ultimo simbolo
 entrada_tabela_simbolos *obter_ultimo_simbolo_categoria(categoria_simbolo cat);
+
+// Trata parâmetros de um procedimento
+void trata_parametros(int deslocamento);
 
 // Função para imprimir a tabela de símbolos
 void imprime_tabela_simbolos();

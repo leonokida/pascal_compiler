@@ -83,13 +83,11 @@ bloco       :
 		rotulo_print++;
       insere_topo(&pilha_rotulos, rotulo_main, 10*sizeof(char));
 
-      //Gera DSVS com rotulo
       sprintf(comando, "DSVS %s", rotulo_main);
       geraCodigo(NULL, comando);
    }
    parte_declara_subrotinas
    {
-      // Gera NADA com rotulo
       char *rotulo = pega_rotulo(pilha_rotulos, 0);
       geraCodigo(rotulo, "NADA");
    }
@@ -169,10 +167,9 @@ lista_aux: IDENT
 ;
 
 /* regra 11 */
-parte_declara_subrotinas: parte_declara_subrotinas declara_procedimento
+parte_declara_subrotinas: 
+   | parte_declara_subrotinas declara_procedimento
    | parte_declara_subrotinas declara_funcao
-   | declara_funcao
-   | declara_procedimento
 ;
 
 /* REGRA 12 */
@@ -285,7 +282,7 @@ finaliza_procedimento: {
       sprintf(comando, "ENPR %d", nivel_lex);
       geraCodigo(rotulo, comando);
    }
-   comando_composto PONTO_E_VIRGULA
+   bloco PONTO_E_VIRGULA
    {
       entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(procedimento);
       atributos_procedimento *atr_proc = (atributos_procedimento *)proc_simb->atributos;
@@ -302,7 +299,7 @@ finaliza_funcao: {
       sprintf(comando, "ENPR %d", nivel_lex);
       geraCodigo(rotulo, comando);
    }
-   comando_composto PONTO_E_VIRGULA
+   bloco PONTO_E_VIRGULA
    {
       entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(funcao);
       atributos_funcao *atr_func = (atributos_funcao *)proc_simb->atributos;

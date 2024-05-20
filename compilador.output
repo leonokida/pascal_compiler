@@ -1,8 +1,3 @@
-Não terminais inúteis na gramática
-
-    lista_expressoes
-
-
 Terminais sem uso na gramática
 
     LABEL
@@ -14,20 +9,6 @@ Terminais sem uso na gramática
     LONGINT
     REAL
     CHAR
-
-
-Regras inúteis na gramática
-
-  114 lista_expressoes: lista_expressoes VIRGULA expressao
-  115                 | expressao
-
-
-Regras inúteis no analisador por causa de conflitos
-
-   73 chamada_de_funcao: ε
-
-
-Estado 112 conflitos: 19 de redução/redução
 
 
 Gramática
@@ -123,102 +104,114 @@ Gramática
 
    50 finaliza_funcao: $@16 bloco PONTO_E_VIRGULA
 
-   51 expressao: expressao_simples
-   52          | expressao_simples relacao expressao_simples
+   51 $@17: ε
 
-   53 expressao_simples: expressao_simples sinal_ou_or termo
-   54                  | sinal termo
-   55                  | termo
+   52 lista_expressoes: lista_expressoes VIRGULA $@17 expressao
+   53                 | expressao
+   54                 | ε
 
-   56 sinal_ou_or: sinal
-   57            | OR
+   55 expressao: expressao_simples
+   56          | expressao_simples relacao expressao_simples
 
-   58 sinal: SOMA
-   59      | SUBTRAI
+   57 expressao_simples: expressao_simples sinal_ou_or termo
+   58                  | sinal termo
+   59                  | termo
 
-   60 termo: fator
-   61      | termo operacao_termo fator
+   60 sinal_ou_or: sinal
+   61            | OR
 
-   62 operacao_termo: MUL
-   63               | DIV
-   64               | AND
+   62 sinal: SOMA
+   63      | SUBTRAI
 
-   65 $@17: ε
+   64 termo: fator
+   65      | termo operacao_termo fator
 
-   66 fator: IDENT $@17 var_ou_func
-   67      | NUMERO
-   68      | ABRE_PARENTESES expressao FECHA_PARENTESES
-   69      | NOT fator
+   66 operacao_termo: MUL
+   67               | DIV
+   68               | AND
 
-   70 var_ou_func: variavel
-   71            | chamada_de_funcao
+   69 $@18: ε
 
-   72 variavel: ε
+   70 fator: IDENT $@18 var_ou_func
+   71      | NUMERO
+   72      | ABRE_PARENTESES expressao FECHA_PARENTESES
+   73      | NOT fator
 
-   73 chamada_de_funcao: ε
+   74 var_ou_func: variavel
+   75            | chamada_de_funcao
 
-   74 relacao: IGUAL
-   75        | DIFERENTE
-   76        | MENOR
-   77        | MENOR_OU_IGUAL
-   78        | MAIOR
-   79        | MAIOR_OU_IGUAL
+   76 variavel: ε
 
-   80 comando_composto: T_BEGIN comandos T_END
+   77 $@19: ε
 
-   81 comandos: ε
-   82         | comando PONTO_E_VIRGULA comandos
-   83         | comando
+   78 chamada_de_funcao: ABRE_PARENTESES $@19 lista_expressoes FECHA_PARENTESES
 
-   84 comando: NUMERO DOIS_PONTOS comando_sem_rotulo
-   85        | comando_sem_rotulo
+   79 relacao: IGUAL
+   80        | DIFERENTE
+   81        | MENOR
+   82        | MENOR_OU_IGUAL
+   83        | MAIOR
+   84        | MAIOR_OU_IGUAL
 
-   86 $@18: ε
+   85 comando_composto: T_BEGIN comandos T_END
 
-   87 comando_sem_rotulo: IDENT $@18 trata_ident
-   88                   | comando_repetitivo
-   89                   | comando_condicional
-   90                   | comando_composto
-   91                   | comando_read
-   92                   | comando_write
+   86 comandos: ε
+   87         | comando PONTO_E_VIRGULA comandos
+   88         | comando
 
-   93 trata_ident: atribuicao
-   94            | chama_proc
+   89 comando: NUMERO DOIS_PONTOS comando_sem_rotulo
+   90        | comando_sem_rotulo
 
-   95 $@19: ε
+   91 $@20: ε
 
-   96 atribuicao: ATRIBUICAO $@19 expressao
+   92 comando_sem_rotulo: IDENT $@20 trata_ident
+   93                   | comando_repetitivo
+   94                   | comando_condicional
+   95                   | comando_composto
+   96                   | comando_read
+   97                   | comando_write
 
-   97 chama_proc: ε
+   98 trata_ident: atribuicao
+   99            | chamada_de_procedimento
 
-   98 $@20: ε
+  100 $@21: ε
 
-   99 $@21: ε
+  101 atribuicao: ATRIBUICAO $@21 expressao
 
-  100 comando_repetitivo: WHILE $@20 expressao DO $@21 comando_composto
+  102 chamada_de_procedimento: ε
 
-  101 $@22: ε
+  103 $@22: ε
 
-  102 comando_condicional: $@22 bloco_if bloco_else
+  104 chamada_de_procedimento: ABRE_PARENTESES $@22 lista_expressoes FECHA_PARENTESES
 
-  103 $@23: ε
+  105 $@23: ε
 
-  104 bloco_if: IF expressao $@23 THEN comando_sem_rotulo
+  106 $@24: ε
 
-  105 $@24: ε
+  107 comando_repetitivo: WHILE $@23 expressao DO $@24 comando_composto
 
-  106 bloco_else: ELSE $@24 comando_sem_rotulo
-  107           | ε
+  108 $@25: ε
 
-  108 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
+  109 comando_condicional: $@25 bloco_if bloco_else
 
-  109 read_params: read_params VIRGULA IDENT
-  110            | IDENT
+  110 $@26: ε
 
-  111 comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES
+  111 bloco_if: IF expressao $@26 THEN comando_sem_rotulo
 
-  112 write_params: write_params VIRGULA expressao
-  113             | expressao
+  112 $@27: ε
+
+  113 bloco_else: ELSE $@27 comando_sem_rotulo
+  114           | ε
+
+  115 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES
+
+  116 read_params: read_params VIRGULA IDENT
+  117            | IDENT
+
+  118 comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES
+
+  119 write_params: write_params VIRGULA expressao
+  120             | expressao
 
 
 Terminais, com as regras onde eles aparecem
@@ -226,17 +219,17 @@ Terminais, com as regras onde eles aparecem
     $end (0) 0
     error (256)
     PROGRAM (258) 2
-    ABRE_PARENTESES (259) 2 34 68 108 111
-    FECHA_PARENTESES (260) 2 34 68 108 111
-    VIRGULA (261) 17 19 43 109 112
-    PONTO_E_VIRGULA (262) 2 14 27 29 36 48 50 82
-    DOIS_PONTOS (263) 14 29 39 42 84
+    ABRE_PARENTESES (259) 2 34 72 78 104 115 118
+    FECHA_PARENTESES (260) 2 34 72 78 104 115 118
+    VIRGULA (261) 17 19 43 52 116 119
+    PONTO_E_VIRGULA (262) 2 14 27 29 36 48 50 87
+    DOIS_PONTOS (263) 14 29 39 42 89
     PONTO (264) 2
-    T_BEGIN (265) 80
-    T_END (266) 80
+    T_BEGIN (265) 85
+    T_END (266) 85
     VAR (267) 9 39
-    IDENT (268) 2 17 18 21 27 29 43 44 66 87 109 110
-    ATRIBUICAO (269) 96
+    IDENT (268) 2 17 18 21 27 29 43 44 70 92 116 117
+    ATRIBUICAO (269) 101
     LABEL (270)
     TYPE (271)
     ARRAY (272)
@@ -244,33 +237,33 @@ Terminais, com as regras onde eles aparecem
     PROCEDURE (274) 27
     FUNCTION (275) 29
     GOTO (276)
-    IF (277) 104
-    ELSE (278) 106
-    WHILE (279) 100
-    DO (280) 100
-    IGUAL (281) 74
-    DIFERENTE (282) 75
-    MENOR (283) 76
-    MENOR_OU_IGUAL (284) 77
-    MAIOR (285) 78
-    MAIOR_OU_IGUAL (286) 79
-    OR (287) 57
-    AND (288) 64
-    THEN (289) 104
-    NOT (290) 69
-    SOMA (291) 58
-    SUBTRAI (292) 59
-    DIV (293) 63
-    MUL (294) 62
+    IF (277) 111
+    ELSE (278) 113
+    WHILE (279) 107
+    DO (280) 107
+    IGUAL (281) 79
+    DIFERENTE (282) 80
+    MENOR (283) 81
+    MENOR_OU_IGUAL (284) 82
+    MAIOR (285) 83
+    MAIOR_OU_IGUAL (286) 84
+    OR (287) 61
+    AND (288) 68
+    THEN (289) 111
+    NOT (290) 73
+    SOMA (291) 62
+    SUBTRAI (292) 63
+    DIV (293) 67
+    MUL (294) 66
     MOD (295)
     INTEGER (296) 15 30 45
     LONGINT (297)
     REAL (298)
     CHAR (299)
     BOOLEAN (300) 16 31 46
-    NUMERO (301) 22 67 84
-    READ (302) 108
-    WRITE (303) 111
+    NUMERO (301) 22 71 89
+    READ (302) 115
+    WRITE (303) 118
     LOWER_THAN_ELSE (304)
 
 
@@ -383,108 +376,120 @@ Não terminais com as regras onde eles aparecem
     $@16 (85)
         à esquerda: 49
         à direita: 50
-    expressao (86)
-        à esquerda: 51 52
-        à direita: 68 96 100 104 112 113
-    expressao_simples (87)
-        à esquerda: 53 54 55
-        à direita: 51 52 53
-    sinal_ou_or (88)
-        à esquerda: 56 57
-        à direita: 53
-    sinal (89)
-        à esquerda: 58 59
-        à direita: 54 56
-    termo (90)
-        à esquerda: 60 61
-        à direita: 53 54 55 61
-    operacao_termo (91)
-        à esquerda: 62 63 64
-        à direita: 61
-    fator (92)
-        à esquerda: 66 67 68 69
-        à direita: 60 61 69
-    $@17 (93)
-        à esquerda: 65
-        à direita: 66
-    var_ou_func (94)
-        à esquerda: 70 71
-        à direita: 66
-    variavel (95)
-        à esquerda: 72
-        à direita: 70
-    chamada_de_funcao (96)
-        à esquerda: 73
-        à direita: 71
-    relacao (97)
-        à esquerda: 74 75 76 77 78 79
+    lista_expressoes (86)
+        à esquerda: 52 53 54
+        à direita: 52 78 104
+    $@17 (87)
+        à esquerda: 51
         à direita: 52
-    comando_composto (98)
-        à esquerda: 80
-        à direita: 6 90 100
-    comandos (99)
-        à esquerda: 81 82 83
-        à direita: 80 82
-    comando (100)
-        à esquerda: 84 85
-        à direita: 82 83
-    comando_sem_rotulo (101)
-        à esquerda: 87 88 89 90 91 92
-        à direita: 84 85 104 106
-    $@18 (102)
-        à esquerda: 86
-        à direita: 87
-    trata_ident (103)
-        à esquerda: 93 94
-        à direita: 87
-    atribuicao (104)
-        à esquerda: 96
-        à direita: 93
-    $@19 (105)
-        à esquerda: 95
-        à direita: 96
-    chama_proc (106)
-        à esquerda: 97
-        à direita: 94
-    comando_repetitivo (107)
-        à esquerda: 100
-        à direita: 88
-    $@20 (108)
-        à esquerda: 98
-        à direita: 100
-    $@21 (109)
-        à esquerda: 99
-        à direita: 100
-    comando_condicional (110)
-        à esquerda: 102
-        à direita: 89
-    $@22 (111)
+    expressao (88)
+        à esquerda: 55 56
+        à direita: 52 53 72 101 107 111 119 120
+    expressao_simples (89)
+        à esquerda: 57 58 59
+        à direita: 55 56 57
+    sinal_ou_or (90)
+        à esquerda: 60 61
+        à direita: 57
+    sinal (91)
+        à esquerda: 62 63
+        à direita: 58 60
+    termo (92)
+        à esquerda: 64 65
+        à direita: 57 58 59 65
+    operacao_termo (93)
+        à esquerda: 66 67 68
+        à direita: 65
+    fator (94)
+        à esquerda: 70 71 72 73
+        à direita: 64 65 73
+    $@18 (95)
+        à esquerda: 69
+        à direita: 70
+    var_ou_func (96)
+        à esquerda: 74 75
+        à direita: 70
+    variavel (97)
+        à esquerda: 76
+        à direita: 74
+    chamada_de_funcao (98)
+        à esquerda: 78
+        à direita: 75
+    $@19 (99)
+        à esquerda: 77
+        à direita: 78
+    relacao (100)
+        à esquerda: 79 80 81 82 83 84
+        à direita: 56
+    comando_composto (101)
+        à esquerda: 85
+        à direita: 6 95 107
+    comandos (102)
+        à esquerda: 86 87 88
+        à direita: 85 87
+    comando (103)
+        à esquerda: 89 90
+        à direita: 87 88
+    comando_sem_rotulo (104)
+        à esquerda: 92 93 94 95 96 97
+        à direita: 89 90 111 113
+    $@20 (105)
+        à esquerda: 91
+        à direita: 92
+    trata_ident (106)
+        à esquerda: 98 99
+        à direita: 92
+    atribuicao (107)
         à esquerda: 101
-        à direita: 102
-    bloco_if (112)
-        à esquerda: 104
-        à direita: 102
-    $@23 (113)
+        à direita: 98
+    $@21 (108)
+        à esquerda: 100
+        à direita: 101
+    chamada_de_procedimento (109)
+        à esquerda: 102 104
+        à direita: 99
+    $@22 (110)
         à esquerda: 103
         à direita: 104
-    bloco_else (114)
-        à esquerda: 106 107
-        à direita: 102
-    $@24 (115)
+    comando_repetitivo (111)
+        à esquerda: 107
+        à direita: 93
+    $@23 (112)
         à esquerda: 105
-        à direita: 106
-    comando_read (116)
+        à direita: 107
+    $@24 (113)
+        à esquerda: 106
+        à direita: 107
+    comando_condicional (114)
+        à esquerda: 109
+        à direita: 94
+    $@25 (115)
         à esquerda: 108
-        à direita: 91
-    read_params (117)
-        à esquerda: 109 110
-        à direita: 108 109
-    comando_write (118)
+        à direita: 109
+    bloco_if (116)
         à esquerda: 111
-        à direita: 92
-    write_params (119)
-        à esquerda: 112 113
-        à direita: 111 112
+        à direita: 109
+    $@26 (117)
+        à esquerda: 110
+        à direita: 111
+    bloco_else (118)
+        à esquerda: 113 114
+        à direita: 109
+    $@27 (119)
+        à esquerda: 112
+        à direita: 113
+    comando_read (120)
+        à esquerda: 115
+        à direita: 96
+    read_params (121)
+        à esquerda: 116 117
+        à direita: 115 116
+    comando_write (122)
+        à esquerda: 118
+        à direita: 97
+    write_params (123)
+        à esquerda: 119 120
+        à direita: 118 119
 
 
 Estado 0
@@ -792,7 +797,7 @@ Estado 35
 
 Estado 36
 
-   80 comando_composto: T_BEGIN • comandos T_END
+   85 comando_composto: T_BEGIN • comandos T_END
 
     T_BEGIN  deslocar, e ir ao estado 36
     IDENT    deslocar, e ir ao estado 42
@@ -801,8 +806,8 @@ Estado 36
     READ     deslocar, e ir ao estado 45
     WRITE    deslocar, e ir ao estado 46
 
-    IF       reduzir usando a regra 101 ($@22)
-    $padrão  reduzir usando a regra 81 (comandos)
+    IF       reduzir usando a regra 108 ($@25)
+    $padrão  reduzir usando a regra 86 (comandos)
 
     comando_composto     ir ao estado 47
     comandos             ir ao estado 48
@@ -810,7 +815,7 @@ Estado 36
     comando_sem_rotulo   ir ao estado 50
     comando_repetitivo   ir ao estado 51
     comando_condicional  ir ao estado 52
-    $@22                 ir ao estado 53
+    $@25                 ir ao estado 53
     comando_read         ir ao estado 54
     comando_write        ir ao estado 55
 
@@ -863,91 +868,91 @@ Estado 41
 
 Estado 42
 
-   87 comando_sem_rotulo: IDENT • $@18 trata_ident
+   92 comando_sem_rotulo: IDENT • $@20 trata_ident
 
-    $padrão  reduzir usando a regra 86 ($@18)
+    $padrão  reduzir usando a regra 91 ($@20)
 
-    $@18  ir ao estado 63
+    $@20  ir ao estado 63
 
 
 Estado 43
 
-  100 comando_repetitivo: WHILE • $@20 expressao DO $@21 comando_composto
+  107 comando_repetitivo: WHILE • $@23 expressao DO $@24 comando_composto
 
-    $padrão  reduzir usando a regra 98 ($@20)
+    $padrão  reduzir usando a regra 105 ($@23)
 
-    $@20  ir ao estado 64
+    $@23  ir ao estado 64
 
 
 Estado 44
 
-   84 comando: NUMERO • DOIS_PONTOS comando_sem_rotulo
+   89 comando: NUMERO • DOIS_PONTOS comando_sem_rotulo
 
     DOIS_PONTOS  deslocar, e ir ao estado 65
 
 
 Estado 45
 
-  108 comando_read: READ • ABRE_PARENTESES read_params FECHA_PARENTESES
+  115 comando_read: READ • ABRE_PARENTESES read_params FECHA_PARENTESES
 
     ABRE_PARENTESES  deslocar, e ir ao estado 66
 
 
 Estado 46
 
-  111 comando_write: WRITE • ABRE_PARENTESES write_params FECHA_PARENTESES
+  118 comando_write: WRITE • ABRE_PARENTESES write_params FECHA_PARENTESES
 
     ABRE_PARENTESES  deslocar, e ir ao estado 67
 
 
 Estado 47
 
-   90 comando_sem_rotulo: comando_composto •
+   95 comando_sem_rotulo: comando_composto •
 
-    $padrão  reduzir usando a regra 90 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 95 (comando_sem_rotulo)
 
 
 Estado 48
 
-   80 comando_composto: T_BEGIN comandos • T_END
+   85 comando_composto: T_BEGIN comandos • T_END
 
     T_END  deslocar, e ir ao estado 68
 
 
 Estado 49
 
-   82 comandos: comando • PONTO_E_VIRGULA comandos
-   83         | comando •
+   87 comandos: comando • PONTO_E_VIRGULA comandos
+   88         | comando •
 
     PONTO_E_VIRGULA  deslocar, e ir ao estado 69
 
-    $padrão  reduzir usando a regra 83 (comandos)
+    $padrão  reduzir usando a regra 88 (comandos)
 
 
 Estado 50
 
-   85 comando: comando_sem_rotulo •
+   90 comando: comando_sem_rotulo •
 
-    $padrão  reduzir usando a regra 85 (comando)
+    $padrão  reduzir usando a regra 90 (comando)
 
 
 Estado 51
 
-   88 comando_sem_rotulo: comando_repetitivo •
+   93 comando_sem_rotulo: comando_repetitivo •
 
-    $padrão  reduzir usando a regra 88 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 93 (comando_sem_rotulo)
 
 
 Estado 52
 
-   89 comando_sem_rotulo: comando_condicional •
+   94 comando_sem_rotulo: comando_condicional •
 
-    $padrão  reduzir usando a regra 89 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 94 (comando_sem_rotulo)
 
 
 Estado 53
 
-  102 comando_condicional: $@22 • bloco_if bloco_else
+  109 comando_condicional: $@25 • bloco_if bloco_else
 
     IF  deslocar, e ir ao estado 70
 
@@ -956,16 +961,16 @@ Estado 53
 
 Estado 54
 
-   91 comando_sem_rotulo: comando_read •
+   96 comando_sem_rotulo: comando_read •
 
-    $padrão  reduzir usando a regra 91 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 96 (comando_sem_rotulo)
 
 
 Estado 55
 
-   92 comando_sem_rotulo: comando_write •
+   97 comando_sem_rotulo: comando_write •
 
-    $padrão  reduzir usando a regra 92 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 97 (comando_sem_rotulo)
 
 
 Estado 56
@@ -1021,38 +1026,39 @@ Estado 62
 
 Estado 63
 
-   87 comando_sem_rotulo: IDENT $@18 • trata_ident
+   92 comando_sem_rotulo: IDENT $@20 • trata_ident
 
-    ATRIBUICAO  deslocar, e ir ao estado 76
+    ABRE_PARENTESES  deslocar, e ir ao estado 76
+    ATRIBUICAO       deslocar, e ir ao estado 77
 
-    $padrão  reduzir usando a regra 97 (chama_proc)
+    $padrão  reduzir usando a regra 102 (chamada_de_procedimento)
 
-    trata_ident  ir ao estado 77
-    atribuicao   ir ao estado 78
-    chama_proc   ir ao estado 79
+    trata_ident              ir ao estado 78
+    atribuicao               ir ao estado 79
+    chamada_de_procedimento  ir ao estado 80
 
 
 Estado 64
 
-  100 comando_repetitivo: WHILE $@20 • expressao DO $@21 comando_composto
+  107 comando_repetitivo: WHILE $@23 • expressao DO $@24 comando_composto
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
 
-    expressao          ir ao estado 86
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    expressao          ir ao estado 87
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 65
 
-   84 comando: NUMERO DOIS_PONTOS • comando_sem_rotulo
+   89 comando: NUMERO DOIS_PONTOS • comando_sem_rotulo
 
     T_BEGIN  deslocar, e ir ao estado 36
     IDENT    deslocar, e ir ao estado 42
@@ -1060,55 +1066,55 @@ Estado 65
     READ     deslocar, e ir ao estado 45
     WRITE    deslocar, e ir ao estado 46
 
-    $padrão  reduzir usando a regra 101 ($@22)
+    $padrão  reduzir usando a regra 108 ($@25)
 
     comando_composto     ir ao estado 47
-    comando_sem_rotulo   ir ao estado 91
+    comando_sem_rotulo   ir ao estado 92
     comando_repetitivo   ir ao estado 51
     comando_condicional  ir ao estado 52
-    $@22                 ir ao estado 53
+    $@25                 ir ao estado 53
     comando_read         ir ao estado 54
     comando_write        ir ao estado 55
 
 
 Estado 66
 
-  108 comando_read: READ ABRE_PARENTESES • read_params FECHA_PARENTESES
+  115 comando_read: READ ABRE_PARENTESES • read_params FECHA_PARENTESES
 
-    IDENT  deslocar, e ir ao estado 92
+    IDENT  deslocar, e ir ao estado 93
 
-    read_params  ir ao estado 93
+    read_params  ir ao estado 94
 
 
 Estado 67
 
-  111 comando_write: WRITE ABRE_PARENTESES • write_params FECHA_PARENTESES
+  118 comando_write: WRITE ABRE_PARENTESES • write_params FECHA_PARENTESES
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
 
-    expressao          ir ao estado 94
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
-    write_params       ir ao estado 95
+    expressao          ir ao estado 95
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
+    write_params       ir ao estado 96
 
 
 Estado 68
 
-   80 comando_composto: T_BEGIN comandos T_END •
+   85 comando_composto: T_BEGIN comandos T_END •
 
-    $padrão  reduzir usando a regra 80 (comando_composto)
+    $padrão  reduzir usando a regra 85 (comando_composto)
 
 
 Estado 69
 
-   82 comandos: comando PONTO_E_VIRGULA • comandos
+   87 comandos: comando PONTO_E_VIRGULA • comandos
 
     T_BEGIN  deslocar, e ir ao estado 36
     IDENT    deslocar, e ir ao estado 42
@@ -1117,54 +1123,54 @@ Estado 69
     READ     deslocar, e ir ao estado 45
     WRITE    deslocar, e ir ao estado 46
 
-    IF       reduzir usando a regra 101 ($@22)
-    $padrão  reduzir usando a regra 81 (comandos)
+    IF       reduzir usando a regra 108 ($@25)
+    $padrão  reduzir usando a regra 86 (comandos)
 
     comando_composto     ir ao estado 47
-    comandos             ir ao estado 96
+    comandos             ir ao estado 97
     comando              ir ao estado 49
     comando_sem_rotulo   ir ao estado 50
     comando_repetitivo   ir ao estado 51
     comando_condicional  ir ao estado 52
-    $@22                 ir ao estado 53
+    $@25                 ir ao estado 53
     comando_read         ir ao estado 54
     comando_write        ir ao estado 55
 
 
 Estado 70
 
-  104 bloco_if: IF • expressao $@23 THEN comando_sem_rotulo
+  111 bloco_if: IF • expressao $@26 THEN comando_sem_rotulo
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
 
-    expressao          ir ao estado 97
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    expressao          ir ao estado 98
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 71
 
-  102 comando_condicional: $@22 bloco_if • bloco_else
+  109 comando_condicional: $@25 bloco_if • bloco_else
 
-    ELSE  deslocar, e ir ao estado 98
+    ELSE  deslocar, e ir ao estado 99
 
-    $padrão  reduzir usando a regra 107 (bloco_else)
+    $padrão  reduzir usando a regra 114 (bloco_else)
 
-    bloco_else  ir ao estado 99
+    bloco_else  ir ao estado 100
 
 
 Estado 72
 
    14 declara_var: $@6 lista_id_var DOIS_PONTOS tipo $@7 • PONTO_E_VIRGULA
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 100
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 101
 
 
 Estado 73
@@ -1173,615 +1179,609 @@ Estado 73
 
     $padrão  reduzir usando a regra 47 ($@15)
 
-    finaliza_procedimento  ir ao estado 101
-    $@15                   ir ao estado 102
+    finaliza_procedimento  ir ao estado 102
+    $@15                   ir ao estado 103
 
 
 Estado 74
 
    34 parametros_formais: $@10 ABRE_PARENTESES • secao_parametros_formais FECHA_PARENTESES
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 103
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 104
 
     VAR      reduzir usando a regra 37 ($@11)
     IDENT    reduzir usando a regra 40 ($@13)
     $padrão  reduzir usando a regra 35 (secao_parametros_formais)
 
-    secao_parametros_formais  ir ao estado 104
-    $@11                      ir ao estado 105
-    $@13                      ir ao estado 106
+    secao_parametros_formais  ir ao estado 105
+    $@11                      ir ao estado 106
+    $@13                      ir ao estado 107
 
 
 Estado 75
 
    29 declara_funcao: FUNCTION IDENT $@9 parametros_formais DOIS_PONTOS • tipo_func PONTO_E_VIRGULA finaliza_funcao
 
-    INTEGER  deslocar, e ir ao estado 107
-    BOOLEAN  deslocar, e ir ao estado 108
+    INTEGER  deslocar, e ir ao estado 108
+    BOOLEAN  deslocar, e ir ao estado 109
 
-    tipo_func  ir ao estado 109
+    tipo_func  ir ao estado 110
 
 
 Estado 76
 
-   96 atribuicao: ATRIBUICAO • $@19 expressao
+  104 chamada_de_procedimento: ABRE_PARENTESES • $@22 lista_expressoes FECHA_PARENTESES
 
-    $padrão  reduzir usando a regra 95 ($@19)
+    $padrão  reduzir usando a regra 103 ($@22)
 
-    $@19  ir ao estado 110
+    $@22  ir ao estado 111
 
 
 Estado 77
 
-   87 comando_sem_rotulo: IDENT $@18 trata_ident •
+  101 atribuicao: ATRIBUICAO • $@21 expressao
 
-    $padrão  reduzir usando a regra 87 (comando_sem_rotulo)
+    $padrão  reduzir usando a regra 100 ($@21)
+
+    $@21  ir ao estado 112
 
 
 Estado 78
 
-   93 trata_ident: atribuicao •
+   92 comando_sem_rotulo: IDENT $@20 trata_ident •
 
-    $padrão  reduzir usando a regra 93 (trata_ident)
+    $padrão  reduzir usando a regra 92 (comando_sem_rotulo)
 
 
 Estado 79
 
-   94 trata_ident: chama_proc •
+   98 trata_ident: atribuicao •
 
-    $padrão  reduzir usando a regra 94 (trata_ident)
+    $padrão  reduzir usando a regra 98 (trata_ident)
 
 
 Estado 80
 
-   68 fator: ABRE_PARENTESES • expressao FECHA_PARENTESES
+   99 trata_ident: chamada_de_procedimento •
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
-
-    expressao          ir ao estado 111
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    $padrão  reduzir usando a regra 99 (trata_ident)
 
 
 Estado 81
 
-   66 fator: IDENT • $@17 var_ou_func
+   72 fator: ABRE_PARENTESES • expressao FECHA_PARENTESES
 
-    $padrão  reduzir usando a regra 65 ($@17)
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
 
-    $@17  ir ao estado 112
+    expressao          ir ao estado 113
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 82
 
-   69 fator: NOT • fator
+   70 fator: IDENT • $@18 var_ou_func
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    NUMERO           deslocar, e ir ao estado 85
+    $padrão  reduzir usando a regra 69 ($@18)
 
-    fator  ir ao estado 113
+    $@18  ir ao estado 114
 
 
 Estado 83
 
-   58 sinal: SOMA •
+   73 fator: NOT • fator
 
-    $padrão  reduzir usando a regra 58 (sinal)
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    NUMERO           deslocar, e ir ao estado 86
+
+    fator  ir ao estado 115
 
 
 Estado 84
 
-   59 sinal: SUBTRAI •
+   62 sinal: SOMA •
 
-    $padrão  reduzir usando a regra 59 (sinal)
+    $padrão  reduzir usando a regra 62 (sinal)
 
 
 Estado 85
 
-   67 fator: NUMERO •
+   63 sinal: SUBTRAI •
 
-    $padrão  reduzir usando a regra 67 (fator)
+    $padrão  reduzir usando a regra 63 (sinal)
 
 
 Estado 86
 
-  100 comando_repetitivo: WHILE $@20 expressao • DO $@21 comando_composto
+   71 fator: NUMERO •
 
-    DO  deslocar, e ir ao estado 114
+    $padrão  reduzir usando a regra 71 (fator)
 
 
 Estado 87
 
-   51 expressao: expressao_simples •
-   52          | expressao_simples • relacao expressao_simples
-   53 expressao_simples: expressao_simples • sinal_ou_or termo
+  107 comando_repetitivo: WHILE $@23 expressao • DO $@24 comando_composto
 
-    IGUAL           deslocar, e ir ao estado 115
-    DIFERENTE       deslocar, e ir ao estado 116
-    MENOR           deslocar, e ir ao estado 117
-    MENOR_OU_IGUAL  deslocar, e ir ao estado 118
-    MAIOR           deslocar, e ir ao estado 119
-    MAIOR_OU_IGUAL  deslocar, e ir ao estado 120
-    OR              deslocar, e ir ao estado 121
-    SOMA            deslocar, e ir ao estado 83
-    SUBTRAI         deslocar, e ir ao estado 84
-
-    $padrão  reduzir usando a regra 51 (expressao)
-
-    sinal_ou_or  ir ao estado 122
-    sinal        ir ao estado 123
-    relacao      ir ao estado 124
+    DO  deslocar, e ir ao estado 116
 
 
 Estado 88
 
-   54 expressao_simples: sinal • termo
+   55 expressao: expressao_simples •
+   56          | expressao_simples • relacao expressao_simples
+   57 expressao_simples: expressao_simples • sinal_ou_or termo
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    NUMERO           deslocar, e ir ao estado 85
+    IGUAL           deslocar, e ir ao estado 117
+    DIFERENTE       deslocar, e ir ao estado 118
+    MENOR           deslocar, e ir ao estado 119
+    MENOR_OU_IGUAL  deslocar, e ir ao estado 120
+    MAIOR           deslocar, e ir ao estado 121
+    MAIOR_OU_IGUAL  deslocar, e ir ao estado 122
+    OR              deslocar, e ir ao estado 123
+    SOMA            deslocar, e ir ao estado 84
+    SUBTRAI         deslocar, e ir ao estado 85
 
-    termo  ir ao estado 125
-    fator  ir ao estado 90
+    $padrão  reduzir usando a regra 55 (expressao)
+
+    sinal_ou_or  ir ao estado 124
+    sinal        ir ao estado 125
+    relacao      ir ao estado 126
 
 
 Estado 89
 
-   55 expressao_simples: termo •
-   61 termo: termo • operacao_termo fator
+   58 expressao_simples: sinal • termo
 
-    AND  deslocar, e ir ao estado 126
-    DIV  deslocar, e ir ao estado 127
-    MUL  deslocar, e ir ao estado 128
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    NUMERO           deslocar, e ir ao estado 86
 
-    $padrão  reduzir usando a regra 55 (expressao_simples)
-
-    operacao_termo  ir ao estado 129
+    termo  ir ao estado 127
+    fator  ir ao estado 91
 
 
 Estado 90
 
-   60 termo: fator •
+   59 expressao_simples: termo •
+   65 termo: termo • operacao_termo fator
 
-    $padrão  reduzir usando a regra 60 (termo)
+    AND  deslocar, e ir ao estado 128
+    DIV  deslocar, e ir ao estado 129
+    MUL  deslocar, e ir ao estado 130
+
+    $padrão  reduzir usando a regra 59 (expressao_simples)
+
+    operacao_termo  ir ao estado 131
 
 
 Estado 91
 
-   84 comando: NUMERO DOIS_PONTOS comando_sem_rotulo •
+   64 termo: fator •
 
-    $padrão  reduzir usando a regra 84 (comando)
+    $padrão  reduzir usando a regra 64 (termo)
 
 
 Estado 92
 
-  110 read_params: IDENT •
+   89 comando: NUMERO DOIS_PONTOS comando_sem_rotulo •
 
-    $padrão  reduzir usando a regra 110 (read_params)
+    $padrão  reduzir usando a regra 89 (comando)
 
 
 Estado 93
 
-  108 comando_read: READ ABRE_PARENTESES read_params • FECHA_PARENTESES
-  109 read_params: read_params • VIRGULA IDENT
+  117 read_params: IDENT •
 
-    FECHA_PARENTESES  deslocar, e ir ao estado 130
-    VIRGULA           deslocar, e ir ao estado 131
+    $padrão  reduzir usando a regra 117 (read_params)
 
 
 Estado 94
 
-  113 write_params: expressao •
-
-    $padrão  reduzir usando a regra 113 (write_params)
-
-
-Estado 95
-
-  111 comando_write: WRITE ABRE_PARENTESES write_params • FECHA_PARENTESES
-  112 write_params: write_params • VIRGULA expressao
+  115 comando_read: READ ABRE_PARENTESES read_params • FECHA_PARENTESES
+  116 read_params: read_params • VIRGULA IDENT
 
     FECHA_PARENTESES  deslocar, e ir ao estado 132
     VIRGULA           deslocar, e ir ao estado 133
 
 
+Estado 95
+
+  120 write_params: expressao •
+
+    $padrão  reduzir usando a regra 120 (write_params)
+
+
 Estado 96
 
-   82 comandos: comando PONTO_E_VIRGULA comandos •
+  118 comando_write: WRITE ABRE_PARENTESES write_params • FECHA_PARENTESES
+  119 write_params: write_params • VIRGULA expressao
 
-    $padrão  reduzir usando a regra 82 (comandos)
+    FECHA_PARENTESES  deslocar, e ir ao estado 134
+    VIRGULA           deslocar, e ir ao estado 135
 
 
 Estado 97
 
-  104 bloco_if: IF expressao • $@23 THEN comando_sem_rotulo
+   87 comandos: comando PONTO_E_VIRGULA comandos •
 
-    $padrão  reduzir usando a regra 103 ($@23)
-
-    $@23  ir ao estado 134
+    $padrão  reduzir usando a regra 87 (comandos)
 
 
 Estado 98
 
-  106 bloco_else: ELSE • $@24 comando_sem_rotulo
+  111 bloco_if: IF expressao • $@26 THEN comando_sem_rotulo
 
-    $padrão  reduzir usando a regra 105 ($@24)
+    $padrão  reduzir usando a regra 110 ($@26)
 
-    $@24  ir ao estado 135
+    $@26  ir ao estado 136
 
 
 Estado 99
 
-  102 comando_condicional: $@22 bloco_if bloco_else •
+  113 bloco_else: ELSE • $@27 comando_sem_rotulo
 
-    $padrão  reduzir usando a regra 102 (comando_condicional)
+    $padrão  reduzir usando a regra 112 ($@27)
+
+    $@27  ir ao estado 137
 
 
 Estado 100
+
+  109 comando_condicional: $@25 bloco_if bloco_else •
+
+    $padrão  reduzir usando a regra 109 (comando_condicional)
+
+
+Estado 101
 
    14 declara_var: $@6 lista_id_var DOIS_PONTOS tipo $@7 PONTO_E_VIRGULA •
 
     $padrão  reduzir usando a regra 14 (declara_var)
 
 
-Estado 101
+Estado 102
 
    27 declara_procedimento: PROCEDURE IDENT $@8 parametros_formais PONTO_E_VIRGULA finaliza_procedimento •
 
     $padrão  reduzir usando a regra 27 (declara_procedimento)
 
 
-Estado 102
+Estado 103
 
    48 finaliza_procedimento: $@15 • bloco PONTO_E_VIRGULA
 
     $padrão  reduzir usando a regra 3 ($@2)
 
-    bloco  ir ao estado 136
+    bloco  ir ao estado 138
     $@2    ir ao estado 16
 
 
-Estado 103
+Estado 104
 
    36 secao_parametros_formais: PONTO_E_VIRGULA • secao_parametros_formais
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 103
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 104
 
     VAR      reduzir usando a regra 37 ($@11)
     IDENT    reduzir usando a regra 40 ($@13)
     $padrão  reduzir usando a regra 35 (secao_parametros_formais)
 
-    secao_parametros_formais  ir ao estado 137
-    $@11                      ir ao estado 105
-    $@13                      ir ao estado 106
-
-
-Estado 104
-
-   34 parametros_formais: $@10 ABRE_PARENTESES secao_parametros_formais • FECHA_PARENTESES
-
-    FECHA_PARENTESES  deslocar, e ir ao estado 138
+    secao_parametros_formais  ir ao estado 139
+    $@11                      ir ao estado 106
+    $@13                      ir ao estado 107
 
 
 Estado 105
 
-   39 secao_parametros_formais: $@11 • VAR lista_id_param DOIS_PONTOS tipo_param $@12 secao_parametros_formais
+   34 parametros_formais: $@10 ABRE_PARENTESES secao_parametros_formais • FECHA_PARENTESES
 
-    VAR  deslocar, e ir ao estado 139
+    FECHA_PARENTESES  deslocar, e ir ao estado 140
 
 
 Estado 106
 
-   42 secao_parametros_formais: $@13 • lista_id_param DOIS_PONTOS tipo_param $@14 secao_parametros_formais
+   39 secao_parametros_formais: $@11 • VAR lista_id_param DOIS_PONTOS tipo_param $@12 secao_parametros_formais
 
-    IDENT  deslocar, e ir ao estado 140
-
-    lista_id_param  ir ao estado 141
+    VAR  deslocar, e ir ao estado 141
 
 
 Estado 107
+
+   42 secao_parametros_formais: $@13 • lista_id_param DOIS_PONTOS tipo_param $@14 secao_parametros_formais
+
+    IDENT  deslocar, e ir ao estado 142
+
+    lista_id_param  ir ao estado 143
+
+
+Estado 108
 
    30 tipo_func: INTEGER •
 
     $padrão  reduzir usando a regra 30 (tipo_func)
 
 
-Estado 108
+Estado 109
 
    31 tipo_func: BOOLEAN •
 
     $padrão  reduzir usando a regra 31 (tipo_func)
 
 
-Estado 109
+Estado 110
 
    29 declara_funcao: FUNCTION IDENT $@9 parametros_formais DOIS_PONTOS tipo_func • PONTO_E_VIRGULA finaliza_funcao
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 142
-
-
-Estado 110
-
-   96 atribuicao: ATRIBUICAO $@19 • expressao
-
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
-
-    expressao          ir ao estado 143
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 144
 
 
 Estado 111
 
-   68 fator: ABRE_PARENTESES expressao • FECHA_PARENTESES
+  104 chamada_de_procedimento: ABRE_PARENTESES $@22 • lista_expressoes FECHA_PARENTESES
 
-    FECHA_PARENTESES  deslocar, e ir ao estado 144
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
+
+    $padrão  reduzir usando a regra 54 (lista_expressoes)
+
+    lista_expressoes   ir ao estado 145
+    expressao          ir ao estado 146
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 112
 
-   66 fator: IDENT $@17 • var_ou_func
+  101 atribuicao: ATRIBUICAO $@21 • expressao
 
-    FECHA_PARENTESES  reduzir usando a regra 72 (variavel)
-    FECHA_PARENTESES  [reduzir usando a regra 73 (chamada_de_funcao)]
-    VIRGULA           reduzir usando a regra 72 (variavel)
-    VIRGULA           [reduzir usando a regra 73 (chamada_de_funcao)]
-    PONTO_E_VIRGULA   reduzir usando a regra 72 (variavel)
-    PONTO_E_VIRGULA   [reduzir usando a regra 73 (chamada_de_funcao)]
-    T_END             reduzir usando a regra 72 (variavel)
-    T_END             [reduzir usando a regra 73 (chamada_de_funcao)]
-    ELSE              reduzir usando a regra 72 (variavel)
-    ELSE              [reduzir usando a regra 73 (chamada_de_funcao)]
-    DO                reduzir usando a regra 72 (variavel)
-    DO                [reduzir usando a regra 73 (chamada_de_funcao)]
-    IGUAL             reduzir usando a regra 72 (variavel)
-    IGUAL             [reduzir usando a regra 73 (chamada_de_funcao)]
-    DIFERENTE         reduzir usando a regra 72 (variavel)
-    DIFERENTE         [reduzir usando a regra 73 (chamada_de_funcao)]
-    MENOR             reduzir usando a regra 72 (variavel)
-    MENOR             [reduzir usando a regra 73 (chamada_de_funcao)]
-    MENOR_OU_IGUAL    reduzir usando a regra 72 (variavel)
-    MENOR_OU_IGUAL    [reduzir usando a regra 73 (chamada_de_funcao)]
-    MAIOR             reduzir usando a regra 72 (variavel)
-    MAIOR             [reduzir usando a regra 73 (chamada_de_funcao)]
-    MAIOR_OU_IGUAL    reduzir usando a regra 72 (variavel)
-    MAIOR_OU_IGUAL    [reduzir usando a regra 73 (chamada_de_funcao)]
-    OR                reduzir usando a regra 72 (variavel)
-    OR                [reduzir usando a regra 73 (chamada_de_funcao)]
-    AND               reduzir usando a regra 72 (variavel)
-    AND               [reduzir usando a regra 73 (chamada_de_funcao)]
-    THEN              reduzir usando a regra 72 (variavel)
-    THEN              [reduzir usando a regra 73 (chamada_de_funcao)]
-    SOMA              reduzir usando a regra 72 (variavel)
-    SOMA              [reduzir usando a regra 73 (chamada_de_funcao)]
-    SUBTRAI           reduzir usando a regra 72 (variavel)
-    SUBTRAI           [reduzir usando a regra 73 (chamada_de_funcao)]
-    DIV               reduzir usando a regra 72 (variavel)
-    DIV               [reduzir usando a regra 73 (chamada_de_funcao)]
-    MUL               reduzir usando a regra 72 (variavel)
-    MUL               [reduzir usando a regra 73 (chamada_de_funcao)]
-    $padrão           reduzir usando a regra 72 (variavel)
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
 
-    var_ou_func        ir ao estado 145
-    variavel           ir ao estado 146
-    chamada_de_funcao  ir ao estado 147
+    expressao          ir ao estado 147
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 113
 
-   69 fator: NOT fator •
+   72 fator: ABRE_PARENTESES expressao • FECHA_PARENTESES
 
-    $padrão  reduzir usando a regra 69 (fator)
+    FECHA_PARENTESES  deslocar, e ir ao estado 148
 
 
 Estado 114
 
-  100 comando_repetitivo: WHILE $@20 expressao DO • $@21 comando_composto
+   70 fator: IDENT $@18 • var_ou_func
 
-    $padrão  reduzir usando a regra 99 ($@21)
+    ABRE_PARENTESES  deslocar, e ir ao estado 149
 
-    $@21  ir ao estado 148
+    $padrão  reduzir usando a regra 76 (variavel)
+
+    var_ou_func        ir ao estado 150
+    variavel           ir ao estado 151
+    chamada_de_funcao  ir ao estado 152
 
 
 Estado 115
 
-   74 relacao: IGUAL •
+   73 fator: NOT fator •
 
-    $padrão  reduzir usando a regra 74 (relacao)
+    $padrão  reduzir usando a regra 73 (fator)
 
 
 Estado 116
 
-   75 relacao: DIFERENTE •
+  107 comando_repetitivo: WHILE $@23 expressao DO • $@24 comando_composto
 
-    $padrão  reduzir usando a regra 75 (relacao)
+    $padrão  reduzir usando a regra 106 ($@24)
+
+    $@24  ir ao estado 153
 
 
 Estado 117
 
-   76 relacao: MENOR •
-
-    $padrão  reduzir usando a regra 76 (relacao)
-
-
-Estado 118
-
-   77 relacao: MENOR_OU_IGUAL •
-
-    $padrão  reduzir usando a regra 77 (relacao)
-
-
-Estado 119
-
-   78 relacao: MAIOR •
-
-    $padrão  reduzir usando a regra 78 (relacao)
-
-
-Estado 120
-
-   79 relacao: MAIOR_OU_IGUAL •
+   79 relacao: IGUAL •
 
     $padrão  reduzir usando a regra 79 (relacao)
 
 
+Estado 118
+
+   80 relacao: DIFERENTE •
+
+    $padrão  reduzir usando a regra 80 (relacao)
+
+
+Estado 119
+
+   81 relacao: MENOR •
+
+    $padrão  reduzir usando a regra 81 (relacao)
+
+
+Estado 120
+
+   82 relacao: MENOR_OU_IGUAL •
+
+    $padrão  reduzir usando a regra 82 (relacao)
+
+
 Estado 121
 
-   57 sinal_ou_or: OR •
+   83 relacao: MAIOR •
 
-    $padrão  reduzir usando a regra 57 (sinal_ou_or)
+    $padrão  reduzir usando a regra 83 (relacao)
 
 
 Estado 122
 
-   53 expressao_simples: expressao_simples sinal_ou_or • termo
+   84 relacao: MAIOR_OU_IGUAL •
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    NUMERO           deslocar, e ir ao estado 85
-
-    termo  ir ao estado 149
-    fator  ir ao estado 90
+    $padrão  reduzir usando a regra 84 (relacao)
 
 
 Estado 123
 
-   56 sinal_ou_or: sinal •
+   61 sinal_ou_or: OR •
 
-    $padrão  reduzir usando a regra 56 (sinal_ou_or)
+    $padrão  reduzir usando a regra 61 (sinal_ou_or)
 
 
 Estado 124
 
-   52 expressao: expressao_simples relacao • expressao_simples
+   57 expressao_simples: expressao_simples sinal_ou_or • termo
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    NUMERO           deslocar, e ir ao estado 86
 
-    expressao_simples  ir ao estado 150
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    termo  ir ao estado 154
+    fator  ir ao estado 91
 
 
 Estado 125
 
-   54 expressao_simples: sinal termo •
-   61 termo: termo • operacao_termo fator
+   60 sinal_ou_or: sinal •
 
-    AND  deslocar, e ir ao estado 126
-    DIV  deslocar, e ir ao estado 127
-    MUL  deslocar, e ir ao estado 128
-
-    $padrão  reduzir usando a regra 54 (expressao_simples)
-
-    operacao_termo  ir ao estado 129
+    $padrão  reduzir usando a regra 60 (sinal_ou_or)
 
 
 Estado 126
 
-   64 operacao_termo: AND •
+   56 expressao: expressao_simples relacao • expressao_simples
 
-    $padrão  reduzir usando a regra 64 (operacao_termo)
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
+
+    expressao_simples  ir ao estado 155
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
 
 
 Estado 127
 
-   63 operacao_termo: DIV •
+   58 expressao_simples: sinal termo •
+   65 termo: termo • operacao_termo fator
 
-    $padrão  reduzir usando a regra 63 (operacao_termo)
+    AND  deslocar, e ir ao estado 128
+    DIV  deslocar, e ir ao estado 129
+    MUL  deslocar, e ir ao estado 130
+
+    $padrão  reduzir usando a regra 58 (expressao_simples)
+
+    operacao_termo  ir ao estado 131
 
 
 Estado 128
 
-   62 operacao_termo: MUL •
+   68 operacao_termo: AND •
 
-    $padrão  reduzir usando a regra 62 (operacao_termo)
+    $padrão  reduzir usando a regra 68 (operacao_termo)
 
 
 Estado 129
 
-   61 termo: termo operacao_termo • fator
+   67 operacao_termo: DIV •
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    NUMERO           deslocar, e ir ao estado 85
-
-    fator  ir ao estado 151
+    $padrão  reduzir usando a regra 67 (operacao_termo)
 
 
 Estado 130
 
-  108 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES •
+   66 operacao_termo: MUL •
 
-    $padrão  reduzir usando a regra 108 (comando_read)
+    $padrão  reduzir usando a regra 66 (operacao_termo)
 
 
 Estado 131
 
-  109 read_params: read_params VIRGULA • IDENT
+   65 termo: termo operacao_termo • fator
 
-    IDENT  deslocar, e ir ao estado 152
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    NUMERO           deslocar, e ir ao estado 86
+
+    fator  ir ao estado 156
 
 
 Estado 132
 
-  111 comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES •
+  115 comando_read: READ ABRE_PARENTESES read_params FECHA_PARENTESES •
 
-    $padrão  reduzir usando a regra 111 (comando_write)
+    $padrão  reduzir usando a regra 115 (comando_read)
 
 
 Estado 133
 
-  112 write_params: write_params VIRGULA • expressao
+  116 read_params: read_params VIRGULA • IDENT
 
-    ABRE_PARENTESES  deslocar, e ir ao estado 80
-    IDENT            deslocar, e ir ao estado 81
-    NOT              deslocar, e ir ao estado 82
-    SOMA             deslocar, e ir ao estado 83
-    SUBTRAI          deslocar, e ir ao estado 84
-    NUMERO           deslocar, e ir ao estado 85
-
-    expressao          ir ao estado 153
-    expressao_simples  ir ao estado 87
-    sinal              ir ao estado 88
-    termo              ir ao estado 89
-    fator              ir ao estado 90
+    IDENT  deslocar, e ir ao estado 157
 
 
 Estado 134
 
-  104 bloco_if: IF expressao $@23 • THEN comando_sem_rotulo
+  118 comando_write: WRITE ABRE_PARENTESES write_params FECHA_PARENTESES •
 
-    THEN  deslocar, e ir ao estado 154
+    $padrão  reduzir usando a regra 118 (comando_write)
 
 
 Estado 135
 
-  106 bloco_else: ELSE $@24 • comando_sem_rotulo
+  119 write_params: write_params VIRGULA • expressao
+
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
+
+    expressao          ir ao estado 158
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
+
+
+Estado 136
+
+  111 bloco_if: IF expressao $@26 • THEN comando_sem_rotulo
+
+    THEN  deslocar, e ir ao estado 159
+
+
+Estado 137
+
+  113 bloco_else: ELSE $@27 • comando_sem_rotulo
 
     T_BEGIN  deslocar, e ir ao estado 36
     IDENT    deslocar, e ir ao estado 42
@@ -1789,170 +1789,195 @@ Estado 135
     READ     deslocar, e ir ao estado 45
     WRITE    deslocar, e ir ao estado 46
 
-    $padrão  reduzir usando a regra 101 ($@22)
+    $padrão  reduzir usando a regra 108 ($@25)
 
     comando_composto     ir ao estado 47
-    comando_sem_rotulo   ir ao estado 155
+    comando_sem_rotulo   ir ao estado 160
     comando_repetitivo   ir ao estado 51
     comando_condicional  ir ao estado 52
-    $@22                 ir ao estado 53
+    $@25                 ir ao estado 53
     comando_read         ir ao estado 54
     comando_write        ir ao estado 55
 
 
-Estado 136
+Estado 138
 
    48 finaliza_procedimento: $@15 bloco • PONTO_E_VIRGULA
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 156
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 161
 
 
-Estado 137
+Estado 139
 
    36 secao_parametros_formais: PONTO_E_VIRGULA secao_parametros_formais •
 
     $padrão  reduzir usando a regra 36 (secao_parametros_formais)
 
 
-Estado 138
+Estado 140
 
    34 parametros_formais: $@10 ABRE_PARENTESES secao_parametros_formais FECHA_PARENTESES •
 
     $padrão  reduzir usando a regra 34 (parametros_formais)
 
 
-Estado 139
+Estado 141
 
    39 secao_parametros_formais: $@11 VAR • lista_id_param DOIS_PONTOS tipo_param $@12 secao_parametros_formais
 
-    IDENT  deslocar, e ir ao estado 140
+    IDENT  deslocar, e ir ao estado 142
 
-    lista_id_param  ir ao estado 157
+    lista_id_param  ir ao estado 162
 
 
-Estado 140
+Estado 142
 
    44 lista_id_param: IDENT •
 
     $padrão  reduzir usando a regra 44 (lista_id_param)
 
 
-Estado 141
+Estado 143
 
    42 secao_parametros_formais: $@13 lista_id_param • DOIS_PONTOS tipo_param $@14 secao_parametros_formais
    43 lista_id_param: lista_id_param • VIRGULA IDENT
 
-    VIRGULA      deslocar, e ir ao estado 158
-    DOIS_PONTOS  deslocar, e ir ao estado 159
+    VIRGULA      deslocar, e ir ao estado 163
+    DOIS_PONTOS  deslocar, e ir ao estado 164
 
 
-Estado 142
+Estado 144
 
    29 declara_funcao: FUNCTION IDENT $@9 parametros_formais DOIS_PONTOS tipo_func PONTO_E_VIRGULA • finaliza_funcao
 
     $padrão  reduzir usando a regra 49 ($@16)
 
-    finaliza_funcao  ir ao estado 160
-    $@16             ir ao estado 161
-
-
-Estado 143
-
-   96 atribuicao: ATRIBUICAO $@19 expressao •
-
-    $padrão  reduzir usando a regra 96 (atribuicao)
-
-
-Estado 144
-
-   68 fator: ABRE_PARENTESES expressao FECHA_PARENTESES •
-
-    $padrão  reduzir usando a regra 68 (fator)
+    finaliza_funcao  ir ao estado 165
+    $@16             ir ao estado 166
 
 
 Estado 145
 
-   66 fator: IDENT $@17 var_ou_func •
+   52 lista_expressoes: lista_expressoes • VIRGULA $@17 expressao
+  104 chamada_de_procedimento: ABRE_PARENTESES $@22 lista_expressoes • FECHA_PARENTESES
 
-    $padrão  reduzir usando a regra 66 (fator)
+    FECHA_PARENTESES  deslocar, e ir ao estado 167
+    VIRGULA           deslocar, e ir ao estado 168
 
 
 Estado 146
 
-   70 var_ou_func: variavel •
+   53 lista_expressoes: expressao •
 
-    $padrão  reduzir usando a regra 70 (var_ou_func)
+    $padrão  reduzir usando a regra 53 (lista_expressoes)
 
 
 Estado 147
 
-   71 var_ou_func: chamada_de_funcao •
+  101 atribuicao: ATRIBUICAO $@21 expressao •
 
-    $padrão  reduzir usando a regra 71 (var_ou_func)
+    $padrão  reduzir usando a regra 101 (atribuicao)
 
 
 Estado 148
 
-  100 comando_repetitivo: WHILE $@20 expressao DO $@21 • comando_composto
+   72 fator: ABRE_PARENTESES expressao FECHA_PARENTESES •
 
-    T_BEGIN  deslocar, e ir ao estado 36
-
-    comando_composto  ir ao estado 162
+    $padrão  reduzir usando a regra 72 (fator)
 
 
 Estado 149
 
-   53 expressao_simples: expressao_simples sinal_ou_or termo •
-   61 termo: termo • operacao_termo fator
+   78 chamada_de_funcao: ABRE_PARENTESES • $@19 lista_expressoes FECHA_PARENTESES
 
-    AND  deslocar, e ir ao estado 126
-    DIV  deslocar, e ir ao estado 127
-    MUL  deslocar, e ir ao estado 128
+    $padrão  reduzir usando a regra 77 ($@19)
 
-    $padrão  reduzir usando a regra 53 (expressao_simples)
-
-    operacao_termo  ir ao estado 129
+    $@19  ir ao estado 169
 
 
 Estado 150
 
-   52 expressao: expressao_simples relacao expressao_simples •
-   53 expressao_simples: expressao_simples • sinal_ou_or termo
+   70 fator: IDENT $@18 var_ou_func •
 
-    OR       deslocar, e ir ao estado 121
-    SOMA     deslocar, e ir ao estado 83
-    SUBTRAI  deslocar, e ir ao estado 84
-
-    $padrão  reduzir usando a regra 52 (expressao)
-
-    sinal_ou_or  ir ao estado 122
-    sinal        ir ao estado 123
+    $padrão  reduzir usando a regra 70 (fator)
 
 
 Estado 151
 
-   61 termo: termo operacao_termo fator •
+   74 var_ou_func: variavel •
 
-    $padrão  reduzir usando a regra 61 (termo)
+    $padrão  reduzir usando a regra 74 (var_ou_func)
 
 
 Estado 152
 
-  109 read_params: read_params VIRGULA IDENT •
+   75 var_ou_func: chamada_de_funcao •
 
-    $padrão  reduzir usando a regra 109 (read_params)
+    $padrão  reduzir usando a regra 75 (var_ou_func)
 
 
 Estado 153
 
-  112 write_params: write_params VIRGULA expressao •
+  107 comando_repetitivo: WHILE $@23 expressao DO $@24 • comando_composto
 
-    $padrão  reduzir usando a regra 112 (write_params)
+    T_BEGIN  deslocar, e ir ao estado 36
+
+    comando_composto  ir ao estado 170
 
 
 Estado 154
 
-  104 bloco_if: IF expressao $@23 THEN • comando_sem_rotulo
+   57 expressao_simples: expressao_simples sinal_ou_or termo •
+   65 termo: termo • operacao_termo fator
+
+    AND  deslocar, e ir ao estado 128
+    DIV  deslocar, e ir ao estado 129
+    MUL  deslocar, e ir ao estado 130
+
+    $padrão  reduzir usando a regra 57 (expressao_simples)
+
+    operacao_termo  ir ao estado 131
+
+
+Estado 155
+
+   56 expressao: expressao_simples relacao expressao_simples •
+   57 expressao_simples: expressao_simples • sinal_ou_or termo
+
+    OR       deslocar, e ir ao estado 123
+    SOMA     deslocar, e ir ao estado 84
+    SUBTRAI  deslocar, e ir ao estado 85
+
+    $padrão  reduzir usando a regra 56 (expressao)
+
+    sinal_ou_or  ir ao estado 124
+    sinal        ir ao estado 125
+
+
+Estado 156
+
+   65 termo: termo operacao_termo fator •
+
+    $padrão  reduzir usando a regra 65 (termo)
+
+
+Estado 157
+
+  116 read_params: read_params VIRGULA IDENT •
+
+    $padrão  reduzir usando a regra 116 (read_params)
+
+
+Estado 158
+
+  119 write_params: write_params VIRGULA expressao •
+
+    $padrão  reduzir usando a regra 119 (write_params)
+
+
+Estado 159
+
+  111 bloco_if: IF expressao $@26 THEN • comando_sem_rotulo
 
     T_BEGIN  deslocar, e ir ao estado 36
     IDENT    deslocar, e ir ao estado 42
@@ -1960,189 +1985,267 @@ Estado 154
     READ     deslocar, e ir ao estado 45
     WRITE    deslocar, e ir ao estado 46
 
-    $padrão  reduzir usando a regra 101 ($@22)
+    $padrão  reduzir usando a regra 108 ($@25)
 
     comando_composto     ir ao estado 47
-    comando_sem_rotulo   ir ao estado 163
+    comando_sem_rotulo   ir ao estado 171
     comando_repetitivo   ir ao estado 51
     comando_condicional  ir ao estado 52
-    $@22                 ir ao estado 53
+    $@25                 ir ao estado 53
     comando_read         ir ao estado 54
     comando_write        ir ao estado 55
 
 
-Estado 155
+Estado 160
 
-  106 bloco_else: ELSE $@24 comando_sem_rotulo •
+  113 bloco_else: ELSE $@27 comando_sem_rotulo •
 
-    $padrão  reduzir usando a regra 106 (bloco_else)
+    $padrão  reduzir usando a regra 113 (bloco_else)
 
 
-Estado 156
+Estado 161
 
    48 finaliza_procedimento: $@15 bloco PONTO_E_VIRGULA •
 
     $padrão  reduzir usando a regra 48 (finaliza_procedimento)
 
 
-Estado 157
+Estado 162
 
    39 secao_parametros_formais: $@11 VAR lista_id_param • DOIS_PONTOS tipo_param $@12 secao_parametros_formais
    43 lista_id_param: lista_id_param • VIRGULA IDENT
 
-    VIRGULA      deslocar, e ir ao estado 158
-    DOIS_PONTOS  deslocar, e ir ao estado 164
+    VIRGULA      deslocar, e ir ao estado 163
+    DOIS_PONTOS  deslocar, e ir ao estado 172
 
 
-Estado 158
+Estado 163
 
    43 lista_id_param: lista_id_param VIRGULA • IDENT
 
-    IDENT  deslocar, e ir ao estado 165
+    IDENT  deslocar, e ir ao estado 173
 
 
-Estado 159
+Estado 164
 
    42 secao_parametros_formais: $@13 lista_id_param DOIS_PONTOS • tipo_param $@14 secao_parametros_formais
 
-    INTEGER  deslocar, e ir ao estado 166
-    BOOLEAN  deslocar, e ir ao estado 167
+    INTEGER  deslocar, e ir ao estado 174
+    BOOLEAN  deslocar, e ir ao estado 175
 
-    tipo_param  ir ao estado 168
+    tipo_param  ir ao estado 176
 
 
-Estado 160
+Estado 165
 
    29 declara_funcao: FUNCTION IDENT $@9 parametros_formais DOIS_PONTOS tipo_func PONTO_E_VIRGULA finaliza_funcao •
 
     $padrão  reduzir usando a regra 29 (declara_funcao)
 
 
-Estado 161
+Estado 166
 
    50 finaliza_funcao: $@16 • bloco PONTO_E_VIRGULA
 
     $padrão  reduzir usando a regra 3 ($@2)
 
-    bloco  ir ao estado 169
+    bloco  ir ao estado 177
     $@2    ir ao estado 16
 
 
-Estado 162
+Estado 167
 
-  100 comando_repetitivo: WHILE $@20 expressao DO $@21 comando_composto •
+  104 chamada_de_procedimento: ABRE_PARENTESES $@22 lista_expressoes FECHA_PARENTESES •
 
-    $padrão  reduzir usando a regra 100 (comando_repetitivo)
-
-
-Estado 163
-
-  104 bloco_if: IF expressao $@23 THEN comando_sem_rotulo •
-
-    $padrão  reduzir usando a regra 104 (bloco_if)
+    $padrão  reduzir usando a regra 104 (chamada_de_procedimento)
 
 
-Estado 164
+Estado 168
+
+   52 lista_expressoes: lista_expressoes VIRGULA • $@17 expressao
+
+    $padrão  reduzir usando a regra 51 ($@17)
+
+    $@17  ir ao estado 178
+
+
+Estado 169
+
+   78 chamada_de_funcao: ABRE_PARENTESES $@19 • lista_expressoes FECHA_PARENTESES
+
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
+
+    $padrão  reduzir usando a regra 54 (lista_expressoes)
+
+    lista_expressoes   ir ao estado 179
+    expressao          ir ao estado 146
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
+
+
+Estado 170
+
+  107 comando_repetitivo: WHILE $@23 expressao DO $@24 comando_composto •
+
+    $padrão  reduzir usando a regra 107 (comando_repetitivo)
+
+
+Estado 171
+
+  111 bloco_if: IF expressao $@26 THEN comando_sem_rotulo •
+
+    $padrão  reduzir usando a regra 111 (bloco_if)
+
+
+Estado 172
 
    39 secao_parametros_formais: $@11 VAR lista_id_param DOIS_PONTOS • tipo_param $@12 secao_parametros_formais
 
-    INTEGER  deslocar, e ir ao estado 166
-    BOOLEAN  deslocar, e ir ao estado 167
+    INTEGER  deslocar, e ir ao estado 174
+    BOOLEAN  deslocar, e ir ao estado 175
 
-    tipo_param  ir ao estado 170
+    tipo_param  ir ao estado 180
 
 
-Estado 165
+Estado 173
 
    43 lista_id_param: lista_id_param VIRGULA IDENT •
 
     $padrão  reduzir usando a regra 43 (lista_id_param)
 
 
-Estado 166
+Estado 174
 
    45 tipo_param: INTEGER •
 
     $padrão  reduzir usando a regra 45 (tipo_param)
 
 
-Estado 167
+Estado 175
 
    46 tipo_param: BOOLEAN •
 
     $padrão  reduzir usando a regra 46 (tipo_param)
 
 
-Estado 168
+Estado 176
 
    42 secao_parametros_formais: $@13 lista_id_param DOIS_PONTOS tipo_param • $@14 secao_parametros_formais
 
     $padrão  reduzir usando a regra 41 ($@14)
 
-    $@14  ir ao estado 171
+    $@14  ir ao estado 181
 
 
-Estado 169
+Estado 177
 
    50 finaliza_funcao: $@16 bloco • PONTO_E_VIRGULA
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 172
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 182
 
 
-Estado 170
+Estado 178
+
+   52 lista_expressoes: lista_expressoes VIRGULA $@17 • expressao
+
+    ABRE_PARENTESES  deslocar, e ir ao estado 81
+    IDENT            deslocar, e ir ao estado 82
+    NOT              deslocar, e ir ao estado 83
+    SOMA             deslocar, e ir ao estado 84
+    SUBTRAI          deslocar, e ir ao estado 85
+    NUMERO           deslocar, e ir ao estado 86
+
+    expressao          ir ao estado 183
+    expressao_simples  ir ao estado 88
+    sinal              ir ao estado 89
+    termo              ir ao estado 90
+    fator              ir ao estado 91
+
+
+Estado 179
+
+   52 lista_expressoes: lista_expressoes • VIRGULA $@17 expressao
+   78 chamada_de_funcao: ABRE_PARENTESES $@19 lista_expressoes • FECHA_PARENTESES
+
+    FECHA_PARENTESES  deslocar, e ir ao estado 184
+    VIRGULA           deslocar, e ir ao estado 168
+
+
+Estado 180
 
    39 secao_parametros_formais: $@11 VAR lista_id_param DOIS_PONTOS tipo_param • $@12 secao_parametros_formais
 
     $padrão  reduzir usando a regra 38 ($@12)
 
-    $@12  ir ao estado 173
+    $@12  ir ao estado 185
 
 
-Estado 171
+Estado 181
 
    42 secao_parametros_formais: $@13 lista_id_param DOIS_PONTOS tipo_param $@14 • secao_parametros_formais
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 103
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 104
 
     VAR      reduzir usando a regra 37 ($@11)
     IDENT    reduzir usando a regra 40 ($@13)
     $padrão  reduzir usando a regra 35 (secao_parametros_formais)
 
-    secao_parametros_formais  ir ao estado 174
-    $@11                      ir ao estado 105
-    $@13                      ir ao estado 106
+    secao_parametros_formais  ir ao estado 186
+    $@11                      ir ao estado 106
+    $@13                      ir ao estado 107
 
 
-Estado 172
+Estado 182
 
    50 finaliza_funcao: $@16 bloco PONTO_E_VIRGULA •
 
     $padrão  reduzir usando a regra 50 (finaliza_funcao)
 
 
-Estado 173
+Estado 183
+
+   52 lista_expressoes: lista_expressoes VIRGULA $@17 expressao •
+
+    $padrão  reduzir usando a regra 52 (lista_expressoes)
+
+
+Estado 184
+
+   78 chamada_de_funcao: ABRE_PARENTESES $@19 lista_expressoes FECHA_PARENTESES •
+
+    $padrão  reduzir usando a regra 78 (chamada_de_funcao)
+
+
+Estado 185
 
    39 secao_parametros_formais: $@11 VAR lista_id_param DOIS_PONTOS tipo_param $@12 • secao_parametros_formais
 
-    PONTO_E_VIRGULA  deslocar, e ir ao estado 103
+    PONTO_E_VIRGULA  deslocar, e ir ao estado 104
 
     VAR      reduzir usando a regra 37 ($@11)
     IDENT    reduzir usando a regra 40 ($@13)
     $padrão  reduzir usando a regra 35 (secao_parametros_formais)
 
-    secao_parametros_formais  ir ao estado 175
-    $@11                      ir ao estado 105
-    $@13                      ir ao estado 106
+    secao_parametros_formais  ir ao estado 187
+    $@11                      ir ao estado 106
+    $@13                      ir ao estado 107
 
 
-Estado 174
+Estado 186
 
    42 secao_parametros_formais: $@13 lista_id_param DOIS_PONTOS tipo_param $@14 secao_parametros_formais •
 
     $padrão  reduzir usando a regra 42 (secao_parametros_formais)
 
 
-Estado 175
+Estado 187
 
    39 secao_parametros_formais: $@11 VAR lista_id_param DOIS_PONTOS tipo_param $@12 secao_parametros_formais •
 

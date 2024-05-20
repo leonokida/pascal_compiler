@@ -55,6 +55,7 @@ extern simbolos simbolo, relacao;
 extern char token[TAM_TOKEN];
 extern int desloc;
 extern int nl;
+extern int num_params;
 
 extern int num_vars;
 extern int num_vars_bloco;
@@ -64,6 +65,7 @@ extern int rotulo_print;
 extern int desloc;
 
 extern entrada_tabela_simbolos *ident_comando;
+extern entrada_tabela_simbolos *procedimento_atual;
 
 extern pilha_t *tab_simbolos;
 extern pilha_t *pilha_rotulos;
@@ -90,6 +92,7 @@ char *gera_operacao_mepa(operacoes op);
 void leitura(char *token);
 void gera_carregamento(entrada_tabela_simbolos *simb);
 void imprime_operacoes(void *op);
+void checa_parametro_passagem();
 
 int yylex();
 void yyerror(const char *s);

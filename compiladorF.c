@@ -109,6 +109,31 @@ void leitura(char *token) {
 
 }
 
+void checa_parametro_passagem() {
+    if (procedimento_atual == NULL)
+        return;
+
+    atributos_param_formal *atr_param_esperado;
+    if (procedimento_atual->cat == funcao) {
+        atributos_funcao *atr_func = (atributos_funcao *)procedimento_atual->atributos;
+        entrada_tabela_simbolos * param_esperado = atr_func->params[num_params-1];
+        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
+    }
+    else if (procedimento_atual->cat == procedimento) {
+        atributos_procedimento *atr_proc = (atributos_procedimento *)procedimento_atual->atributos;
+        entrada_tabela_simbolos * param_esperado = atr_proc->params[num_params-1];
+        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
+    }
+    else {
+        sprintf(mensagem_erro, "%s não é procedimento nem função", procedimento_atual->id);
+        imprimeErro(mensagem_erro);
+    }
+
+    if (atr_param_esperado->pass == pass_referencia) {
+        imprimeErro("Parâmetro inválido para passagem por referência");
+    }
+}
+
 void gera_carrega_valor(entrada_tabela_simbolos *simb) {
     switch (simb->cat) {
         case var_simples:
@@ -128,6 +153,25 @@ void gera_carrega_valor(entrada_tabela_simbolos *simb) {
     geraCodigo(NULL, comando);
 }
 
+void gera_carrega_endereco(entrada_tabela_simbolos *simb) {
+    switch (simb->cat) {
+        case var_simples:
+            atributos_var_simples *atr_var = simb->atributos;
+            sprintf(comando, "CREN %d, %d", simb->nivel, atr_var->deslocamento);
+            break;
+
+        case param_formal:
+            atributos_param_formal *atr_param = simb->atributos;
+            sprintf(comando, "CREN %d, %d", simb->nivel, atr_param->deslocamento);
+            break;
+
+        default:
+            imprimeErro("Símbolo não pôde ser carregado");
+            break;
+    }
+    geraCodigo(NULL, comando);
+}
+
 void gera_carrega_valor_indireto(entrada_tabela_simbolos *simb) {
     atributos_param_formal *atr_param = simb->atributos;
     sprintf(comando, "CRVI %d, %d", simb->nivel, atr_param->deslocamento);
@@ -135,31 +179,124 @@ void gera_carrega_valor_indireto(entrada_tabela_simbolos *simb) {
 }
 
 void gera_carregamento(entrada_tabela_simbolos *simb) {
-    // falta cobrir casos de dentro de função
-    switch (simb->cat) {
-        case var_simples:
-            gera_carrega_valor(simb);
-            break;
+    if (procedimento_atual != NULL) {
+        if (procedimento_atual->cat == funcao) {
+            atributos_funcao *atr_func_atual = (atributos_funcao *)procedimento_atual->atributos;
+            if (num_params > atr_func_atual->num_params) {
+                imprimeErro("Muitos parâmetros");
+            }
+            atributos_param_formal *atr_param_esperado = (atributos_param_formal *)atr_func_atual->params[num_params - 1]->atributos;
+            tipo_passagem pass_atr = atr_param_esperado->pass;
+            switch(simb->cat) {
+                case var_simples:
+                    if (pass_atr == pass_referencia) {
+                        gera_carrega_endereco(simb);
+                    }
+                    else if (pass_atr = pass_valor) {
+                        gera_carrega_valor(simb);
+                    }
+                    break;
+                
+                case param_formal:
+                    if (pass_atr == pass_referencia) {
+                        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+                        if (atr_param->pass == pass_referencia) {
+                            gera_carrega_valor(simb);
+                        }
+                        else {
+                            gera_carrega_endereco(simb);
+                        }
+                    }
+                    else if (pass_atr = pass_valor) {
+                        gera_carrega_valor(simb);
+                    }
+                    break;
+                
+                case funcao:
+                    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+                    geraCodigo(NULL, "AMEM 1");
+                    sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+                    geraCodigo(NULL, comando);
+                    break;
 
-        case param_formal:
-            atributos_param_formal *atr_param = simb->atributos;
-            if (atr_param->pass == pass_referencia)
-                gera_carrega_valor_indireto(simb);
-            else
+                default:
+                    sprintf(mensagem_erro, "Parâmetro %s é inválido", simb->id);
+                    imprimeErro(mensagem_erro);
+                    break;
+            }
+        }
+        else if (procedimento_atual->cat == procedimento) {
+            atributos_procedimento *atr_proc_atual = (atributos_procedimento *)procedimento_atual->atributos;
+            if (num_params > atr_proc_atual->num_params) {
+                imprimeErro("Muitos parâmetros");
+            }
+            atributos_param_formal *atr_param_esperado = (atributos_param_formal *)atr_proc_atual->params[num_params - 1]->atributos;
+            tipo_passagem pass_atr = atr_param_esperado->pass;
+            switch(simb->cat) {
+                case var_simples:
+                    if (pass_atr == pass_referencia) {
+                        gera_carrega_endereco(simb);
+                    }
+                    else if (pass_atr = pass_valor) {
+                        gera_carrega_valor(simb);
+                    }
+                    break;
+                
+                case param_formal:
+                    if (pass_atr == pass_referencia) {
+                        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+                        if (atr_param->pass == pass_referencia) {
+                            gera_carrega_valor(simb);
+                        }
+                        else {
+                            gera_carrega_endereco(simb);
+                        }
+                    }
+                    else if (pass_atr = pass_valor) {
+                        gera_carrega_valor(simb);
+                    }
+                    break;
+                
+                case funcao:
+                    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+                    geraCodigo(NULL, "AMEM 1");
+                    sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+                    geraCodigo(NULL, comando);
+                    break;
+
+                default:
+                    sprintf(mensagem_erro, "Parâmetro %s é inválido", simb->id);
+                    imprimeErro(mensagem_erro);
+                    break;
+            }
+        }
+    }
+    else {
+        switch (simb->cat) {
+            case var_simples:
                 gera_carrega_valor(simb);
-            break;
+                break;
 
-        case funcao:
-            atributos_funcao *atr_func = simb->atributos;
-            geraCodigo(NULL, "AMEM 1");
-            sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
-            geraCodigo(NULL, comando);
-            break;
+            case param_formal:
+                atributos_param_formal *atr_param = simb->atributos;
+                if (atr_param->pass == pass_referencia)
+                    gera_carrega_valor_indireto(simb);
+                else
+                    gera_carrega_valor(simb);
+                break;
 
-        default:
-            sprintf(mensagem_erro, "Parâmetro %s é inválido", token);
-            imprimeErro(mensagem_erro);
-            break;
+            case funcao:
+                atributos_funcao *atr_func = simb->atributos;
+                geraCodigo(NULL, "AMEM 1");
+                sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+                geraCodigo(NULL, comando);
+                break;
+
+            default:
+                sprintf(mensagem_erro, "Parâmetro %s é inválido", simb->id);
+                imprimeErro(mensagem_erro);
+                break;
+        }
     }
 }
 

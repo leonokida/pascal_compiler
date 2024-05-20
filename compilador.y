@@ -23,7 +23,7 @@ int desloc;
 int num_params;
 
 entrada_tabela_simbolos *ident_comando;
-entrada_tabela_simbolos *procedimento_atual;
+entrada_tabela_simbolos *procedimento_atual = NULL;
 
 pilha_t *tab_simbolos;
 pilha_t *pilha_rotulos;
@@ -312,13 +312,14 @@ finaliza_funcao: {
 ;
 
 /* regra 24 */
-lista_expressoes: lista_expressoes VIRGULA expressao
+lista_expressoes: lista_expressoes VIRGULA {num_params++;} expressao
    | expressao
+   |
 ;
 
 /* regra 25 */
 expressao: expressao_simples
-   | expressao_simples relacao expressao_simples
+   | expressao_simples relacao { checa_parametro_passagem(); } expressao_simples
    {
       tipo *t1, *t2;
       t1 = (tipo *)remove_topo(&expressoes_pilha);
@@ -352,7 +353,7 @@ expressao_simples: expressao_simples sinal_ou_or termo
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
    }
-   | sinal termo
+   | sinal { checa_parametro_passagem(); } termo
    {
       tipo *t1 = (tipo *)remove_topo(&termos_pilha);
       insere_topo(&expressoes_pilha, t1, sizeof(tipo));
@@ -467,6 +468,7 @@ fator: IDENT
    var_ou_func
    | NUMERO
    {
+      checa_parametro_passagem();
       sprintf(comando, "CRCT %s", token);
       geraCodigo(NULL, comando);
 
@@ -496,7 +498,40 @@ variavel:
    }
 ;
 
-chamada_de_funcao:
+chamada_de_funcao: ABRE_PARENTESES {
+      entrada_tabela_simbolos *simb = busca(ident);
+      if (simb == NULL) {
+         sprintf(mensagem_erro, "Símbolo %s não encontrado", ident);
+         imprimeErro(mensagem_erro);
+      }
+
+      geraCodigo(NULL, "AMEM 1");
+
+      procedimento_atual = simb;
+      num_params = 1;
+   }
+   lista_expressoes
+   FECHA_PARENTESES
+   {
+      if (procedimento_atual->cat != procedimento) {
+         sprintf(mensagem_erro, "Símbolo %s não é procedimento", procedimento_atual->id);
+         imprimeErro(mensagem_erro);
+      }
+
+      atributos_funcao *atr_func = (atributos_funcao *) ident_comando->atributos;
+
+      for (int i = 0; i < atr_func->num_params; i++) {
+         tipo *t = remove_topo(&expressoes_pilha);
+         atributos_param_formal *atr_param = (atributos_param_formal *)atr_func->params[i];
+
+         if (*t != atr_func->tipo_funcao)
+            imprimeErro("Tipos incompatíveis na chamada da função");
+      }
+
+      sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
+      geraCodigo(NULL, comando);
+      procedimento_atual = NULL;
+   }
 ;
 
 /* regra 26 */
@@ -562,7 +597,7 @@ comando_sem_rotulo: IDENT
 ;
 
 trata_ident: atribuicao
-   | chama_proc
+   | chamada_de_procedimento
 ;
 
 atribuicao: ATRIBUICAO
@@ -615,7 +650,45 @@ atribuicao: ATRIBUICAO
    }
 ;
 
-chama_proc:
+chamada_de_procedimento: {
+      if (ident_comando->cat != procedimento) {
+         sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
+         imprimeErro(mensagem_erro);
+      }
+
+      atributos_procedimento *atr_proc = (atributos_procedimento *) ident_comando->atributos;
+
+      sprintf(comando, "CHPR %s, %d", atr_proc->rotulo, nivel_lex);
+      geraCodigo(NULL, comando);
+      ident_comando = NULL;
+   }
+   | ABRE_PARENTESES {
+      procedimento_atual = ident_comando;
+      num_params = 1;
+   }
+   lista_expressoes
+   FECHA_PARENTESES
+   {
+      if (ident_comando->cat != procedimento) {
+         sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
+         imprimeErro(mensagem_erro);
+      }
+
+      atributos_procedimento *atr_proc = (atributos_procedimento *) ident_comando->atributos;
+
+      for (int i = 0; i < atr_proc->num_params; i++) {
+         tipo *t = remove_topo(&expressoes_pilha);
+         atributos_param_formal *atr_param = (atributos_param_formal *)atr_proc->params[i];
+
+         if (*t != atr_param->tipo_param)
+            imprimeErro("Tipos incompatíveis na chamada do procedimento");
+      }
+
+      sprintf(comando, "CHPR %s, %d", atr_proc->rotulo, nivel_lex);
+      geraCodigo(NULL, comando);
+      ident_comando = NULL;
+      procedimento_atual = NULL;
+   }
 ;
 
 /* regra 23 */

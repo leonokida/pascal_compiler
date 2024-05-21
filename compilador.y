@@ -654,10 +654,11 @@ atribuicao: ATRIBUICAO
 ;
 
 chamada_de_procedimento: {
-      if ((procedimento_atual->cat != procedimento) && (procedimento_atual->cat != funcao)) {
-         sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
-         imprimeErro(mensagem_erro);
-      }
+      if (procedimento_atual != NULL)
+         if ((procedimento_atual->cat != procedimento) && (procedimento_atual->cat != funcao)) {
+            sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
+            imprimeErro(mensagem_erro);
+         }
 
       atributos_procedimento *atr_proc = (atributos_procedimento *) ident_comando->atributos;
 

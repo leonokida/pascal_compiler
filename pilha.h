@@ -29,6 +29,6 @@ void *remove_topo(pilha_t **pilha);
 void destroi_pilha(pilha_t **pilha);
 
 // Retorna um item específico da pilha pela posição
-void *obter_item_pilha(pilha_t *pilha, int pos);
+void **obter_item_pilha(pilha_t **pilha, int pos);
 
 #endif

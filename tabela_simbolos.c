@@ -21,11 +21,11 @@ int insere_simbolo(entrada_tabela_simbolos * simbolo) {
         break;
     
     case procedimento:
-        tamanho = sizeof(atributos_procedimento);
+        tamanho = 40*sizeof(int);
         break;
     
     case funcao:
-        tamanho = sizeof(atributos_funcao);
+        tamanho = 40*sizeof(int);
         break;
     
     default:
@@ -55,7 +55,7 @@ entrada_tabela_simbolos *busca(char *identificador) {
 void atualiza_tipo(tipo t, int n) {
     pilha_t *iter = tab_simbolos;
     int i = 0;
-    while ((iter != NULL) || (i<n)) {
+    while ((iter != NULL) && (i<n)) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
         atributos_var_simples *atributo_atual = (atributos_var_simples *)simbolo_atual->atributos;
         atributo_atual->tipo_var = t;
@@ -64,11 +64,18 @@ void atualiza_tipo(tipo t, int n) {
     }
 }
 
-void atualiza_tipo_funcao(entrada_tabela_simbolos *simb, tipo t) {
-    if (simb->cat != funcao) {
-        fprintf(stderr, "ERRO - atualiza_tipo_funcao() - símbolo não é função\n");
-        exit(-1);
+void atualiza_tipo_funcao(tipo t) {
+    pilha_t *iter = tab_simbolos;
+    entrada_tabela_simbolos *simb;
+    while (iter != NULL) {
+        simb = (entrada_tabela_simbolos *)iter->dado;
+        if (simb->cat == funcao)
+            break;
+        else {
+            iter = iter->prox;
+        }
     }
+
     atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
     atr_func->tipo_funcao = t;
 }
@@ -126,7 +133,7 @@ atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passag
 void atualiza_tipo_param(tipo t, int n) {
     pilha_t *iter = tab_simbolos;
     int i = 0;
-    while ((iter != NULL) || (i<n)) {
+    while ((iter != NULL) && (i<n)) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
         atributos_param_formal *atributo_atual = (atributos_param_formal *)simbolo_atual->atributos;
         atributo_atual->tipo_param = t;
@@ -138,7 +145,7 @@ void atualiza_tipo_param(tipo t, int n) {
 void atualiza_tipo_passagem(tipo_passagem pass, int n) {
     pilha_t *iter = tab_simbolos;
     int i = 0;
-    while ((iter != NULL) || (i<n)) {
+    while ((iter != NULL) && (i<n)) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *)iter->dado;
         atributos_param_formal *atributo_atual = (atributos_param_formal *)simbolo_atual->atributos;
         atributo_atual->pass = pass;
@@ -153,7 +160,18 @@ void trata_parametros(int deslocamento) {
 
     int novo_desloc = -4;
 
-    entrada_tabela_simbolos *procedimento_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+    entrada_tabela_simbolos *procedimento_simb;
+    int k = 0;
+    pilha_t *iter = tab_simbolos;
+    while ((iter != NULL) && (k <= deslocamento)) {
+        if (k == deslocamento) {
+            procedimento_simb = (entrada_tabela_simbolos *)iter->dado;
+            break;
+        }
+        iter = iter->prox;
+        k++;
+    }
+
     if (procedimento_simb->cat == funcao) {
         atributos_funcao *atr_func = (atributos_funcao *)procedimento_simb->atributos;
         atr_func->num_params = deslocamento;
@@ -161,10 +179,26 @@ void trata_parametros(int deslocamento) {
 
         // atualiza deslocamento dos parametros e adiciona referencia a eles no simbolo do procedimento
         for (int i = 0; i < deslocamento; i++) {
-            entrada_tabela_simbolos *param_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+            
+            // encontra o parametro
+            pilha_t *iter = tab_simbolos;
+            entrada_tabela_simbolos *param_simb;
+            int j = 0;
+            while ((iter != NULL) && (j <= i)) {
+                if (j == i) {
+                    param_simb = (entrada_tabela_simbolos *)iter->dado;
+                    break;
+                }
+                iter = iter->prox;
+                j++;
+            }
+
+            int index_param = deslocamento - 1 - i;
+
             atributos_param_formal *atr_param = (atributos_param_formal *)param_simb->atributos;
             atr_param->deslocamento = novo_desloc;
-            atr_func->params[i] = param_simb;
+            atr_func->params[index_param] = malloc(sizeof(entrada_tabela_simbolos) + sizeof(atributos_param_formal));
+            memcpy(atr_func->params[index_param], param_simb, sizeof(entrada_tabela_simbolos) + sizeof(atributos_param_formal));
             novo_desloc--;
         }
 
@@ -178,17 +212,32 @@ void trata_parametros(int deslocamento) {
 
         // atualiza deslocamento dos parametros e adiciona referencia a eles no simbolo do procedimento
         for (int i = 0; i < deslocamento; i++) {
-            entrada_tabela_simbolos *param_simb = (entrada_tabela_simbolos *)obter_item_pilha(tab_simbolos, deslocamento);
+
+            // encontra o parametro
+            pilha_t *iter = tab_simbolos;
+            entrada_tabela_simbolos *param_simb;
+            int j = 0;
+            while ((iter != NULL) && (j <= i)) {
+                if (j == i) {
+                    param_simb = (entrada_tabela_simbolos *)iter->dado;
+                    break;
+                }
+                iter = iter->prox;
+                j++;
+            }
+
+            int index_param = deslocamento - 1 - i;
+
             atributos_param_formal *atr_param = (atributos_param_formal *)param_simb->atributos;
             atr_param->deslocamento = novo_desloc;
-            atr_proc->params[i] = param_simb;
+            atr_proc->params[index_param] = malloc(sizeof(entrada_tabela_simbolos) + sizeof(atributos_param_formal));
+            memcpy(atr_proc->params[index_param], param_simb, sizeof(entrada_tabela_simbolos) + sizeof(atributos_param_formal));
             novo_desloc--;
         }
     }
     else {
         imprimeErro("Erro ao tratar parâmetros");
     }
-    
 }
 
 void imprime_simbolo(void *simbolo) {
@@ -205,12 +254,16 @@ void imprime_simbolo(void *simbolo) {
         break;
     case procedimento:
         printf("# Procedimento\n");
+        atributos_procedimento *atr_proc = (atributos_procedimento *)simb->atributos;
+        printf("# Número de parâmetros: %d\n", atr_proc->num_params);
+        printf("# Rótulo: %s\n", atr_proc->rotulo);
         printf("# N.L.: %d\n", simb->nivel);
         break;
     case funcao:
         printf("# Função\n");
         atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
         printf("# Tipo: %d\n", atr_func->tipo_funcao);
+        printf("# Rótulo: %s\n", atr_func->rotulo);
         printf("# N.L.: %d\n", simb->nivel);
         printf("# Desloc: %d\n", atr_func->deslocamento);
         break;
@@ -218,6 +271,7 @@ void imprime_simbolo(void *simbolo) {
         printf("# Parâmetro formal\n");
         atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
         printf("# Tipo: %d\n", atr_param->tipo_param);
+        printf("# Tipo de passagem: %d\n", atr_param->pass);
         printf("# N.L.: %d\n", simb->nivel);
         printf("# Desloc: %d\n", atr_param->deslocamento);
         break;
@@ -229,12 +283,12 @@ void imprime_simbolo(void *simbolo) {
     printf("###########\n");
 }
 
-entrada_tabela_simbolos *obter_ultimo_simbolo_categoria(categoria_simbolo cat) {
+entrada_tabela_simbolos **obter_ultimo_simbolo_categoria(categoria_simbolo cat) {
     pilha_t *iter = tab_simbolos;
     while (iter != NULL) {
         entrada_tabela_simbolos *item = (entrada_tabela_simbolos *) iter->dado;
         if (item->cat == cat) {
-            return item;
+            return (entrada_tabela_simbolos **) &(iter->dado);
         }
         iter = iter->prox;
     }

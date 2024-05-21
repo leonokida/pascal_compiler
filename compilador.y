@@ -90,6 +90,7 @@ bloco       :
    {
       char *rotulo = pega_rotulo(pilha_rotulos, 0);
       geraCodigo(rotulo, "NADA");
+      remove_topo(&pilha_rotulos);
    }
    comando_composto
    {
@@ -212,10 +213,10 @@ declara_funcao: FUNCTION IDENT
 ;
 
 tipo_func: INTEGER {
-      atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(funcao), t_integer);
+      atualiza_tipo_funcao(t_integer);
    }
    | BOOLEAN {
-      atualiza_tipo_funcao(obter_ultimo_simbolo_categoria(funcao), t_boolean);
+      atualiza_tipo_funcao(t_boolean);
    }
 ;
 
@@ -284,7 +285,7 @@ finaliza_procedimento: {
    }
    bloco PONTO_E_VIRGULA
    {
-      entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(procedimento);
+      entrada_tabela_simbolos *proc_simb = *(obter_ultimo_simbolo_categoria(procedimento));
       atributos_procedimento *atr_proc = (atributos_procedimento *)proc_simb->atributos;
       sprintf(comando, "RTPR %d, %d", nivel_lex, atr_proc->num_params);
       geraCodigo(NULL, comando);
@@ -301,7 +302,7 @@ finaliza_funcao: {
    }
    bloco PONTO_E_VIRGULA
    {
-      entrada_tabela_simbolos *proc_simb = obter_ultimo_simbolo_categoria(funcao);
+      entrada_tabela_simbolos *proc_simb = *(obter_ultimo_simbolo_categoria(funcao));
       atributos_funcao *atr_func = (atributos_funcao *)proc_simb->atributos;
       sprintf(comando, "RTPR %d, %d", nivel_lex, atr_func->num_params);
       geraCodigo(NULL, comando);
@@ -513,19 +514,21 @@ chamada_de_funcao: ABRE_PARENTESES {
    lista_expressoes
    FECHA_PARENTESES
    {
-      if (procedimento_atual->cat != procedimento) {
+      if ((procedimento_atual->cat != procedimento) && (procedimento_atual->cat != funcao)) {
          sprintf(mensagem_erro, "Símbolo %s não é procedimento", procedimento_atual->id);
          imprimeErro(mensagem_erro);
       }
 
-      atributos_funcao *atr_func = (atributos_funcao *) ident_comando->atributos;
+      atributos_funcao *atr_func = (atributos_funcao *) procedimento_atual->atributos;
 
       for (int i = 0; i < atr_func->num_params; i++) {
          tipo *t = remove_topo(&expressoes_pilha);
-         atributos_param_formal *atr_param = (atributos_param_formal *)atr_func->params[i];
+         entrada_tabela_simbolos *entrada_param = (entrada_tabela_simbolos *)atr_func->params[i];
+         atributos_param_formal *atr_param = (atributos_param_formal *)entrada_param->atributos;
 
-         if (*t != atr_func->tipo_funcao)
+         if (*t != atr_func->tipo_funcao) {
             imprimeErro("Tipos incompatíveis na chamada da função");
+         }
       }
 
       sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
@@ -651,7 +654,7 @@ atribuicao: ATRIBUICAO
 ;
 
 chamada_de_procedimento: {
-      if (ident_comando->cat != procedimento) {
+      if ((procedimento_atual->cat != procedimento) && (procedimento_atual->cat != funcao)) {
          sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
          imprimeErro(mensagem_erro);
       }
@@ -669,19 +672,21 @@ chamada_de_procedimento: {
    lista_expressoes
    FECHA_PARENTESES
    {
-      if (ident_comando->cat != procedimento) {
+      if ((procedimento_atual->cat != procedimento) && (procedimento_atual->cat != funcao)) {
          sprintf(mensagem_erro, "Símbolo %s não é procedimento", ident_comando->id);
          imprimeErro(mensagem_erro);
       }
 
-      atributos_procedimento *atr_proc = (atributos_procedimento *) ident_comando->atributos;
+      atributos_procedimento *atr_proc = (atributos_procedimento *) procedimento_atual->atributos;
 
       for (int i = 0; i < atr_proc->num_params; i++) {
          tipo *t = remove_topo(&expressoes_pilha);
-         atributos_param_formal *atr_param = (atributos_param_formal *)atr_proc->params[i];
+         entrada_tabela_simbolos *entrada_param = (entrada_tabela_simbolos *)atr_proc->params[i];
+         atributos_param_formal *atr_param = (atributos_param_formal *)entrada_param->atributos;
 
-         if (*t != atr_param->tipo_param)
+         if (*t != atr_param->tipo_param) {
             imprimeErro("Tipos incompatíveis na chamada do procedimento");
+         }
       }
 
       sprintf(comando, "CHPR %s, %d", atr_proc->rotulo, nivel_lex);

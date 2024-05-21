@@ -92,19 +92,19 @@ void destroi_pilha(pilha_t **pilha) {
     }
 }
 
-void *obter_item_pilha(pilha_t *pilha, int pos) {
+void **obter_item_pilha(pilha_t **pilha, int pos) {
     // Verifica se a pilha está vazia ou a posição é inválida
     if (pilha == NULL || pos < 0) {
         return NULL;
     }
 
-    pilha_t *atual = pilha;
+    pilha_t *atual = *pilha;
     int contador = 0;
 
     // Percorre a pilha até a posição desejada
     while (atual != NULL) {
         if (contador == pos) {
-            return atual->dado;
+            return &(atual->dado);
         }
         atual = atual->prox;
         contador++;

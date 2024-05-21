@@ -80,7 +80,7 @@ void atualiza_tipo(tipo t, int n);
 void atualiza_tipo_param(tipo t, int n);
 
 // Atualiza o tipo especificamente de funções
-void atualiza_tipo_funcao(entrada_tabela_simbolos *simb, tipo t);
+void atualiza_tipo_funcao(tipo t);
 
 // Cria o símbolo para ser inserido na tabela ("atributos" deve conter uma struct de atributos criada previamente)
 entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos);
@@ -101,7 +101,7 @@ atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passag
 void atualiza_tipo_passagem(tipo_passagem pass, int n);
 
 // Obtem o ultimo simbolo
-entrada_tabela_simbolos *obter_ultimo_simbolo_categoria(categoria_simbolo cat);
+entrada_tabela_simbolos **obter_ultimo_simbolo_categoria(categoria_simbolo cat);
 
 // Trata parâmetros de um procedimento
 void trata_parametros(int deslocamento);

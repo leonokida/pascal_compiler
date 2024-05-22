@@ -12,7 +12,6 @@ void inicializa_tabela_simbolos() {
 }
 
 int insere_simbolo(entrada_tabela_simbolos * simbolo) {
-
     size_t tamanho;
     switch (simbolo->cat)
     {
@@ -21,11 +20,11 @@ int insere_simbolo(entrada_tabela_simbolos * simbolo) {
         break;
     
     case procedimento:
-        tamanho = 40*sizeof(int);
+        tamanho = sizeof(atributos_procedimento) + 15*sizeof(atributos_param_formal);
         break;
     
     case funcao:
-        tamanho = 40*sizeof(int);
+        tamanho = sizeof(atributos_funcao) + 15*sizeof(atributos_param_formal);
         break;
     
     default:
@@ -33,12 +32,34 @@ int insere_simbolo(entrada_tabela_simbolos * simbolo) {
         break;
     }
 
-    return insere_topo(&tab_simbolos, simbolo, sizeof(entrada_tabela_simbolos) + tamanho);
+    if (insere_topo(&tab_simbolos, simbolo, sizeof(entrada_tabela_simbolos) + tamanho)) {
+        free(simbolo);
+        return 1;
+    }
+    else
+        imprimeErro("Erro ao adicionar símbolo na tabela de símbolos");
 }
 
 void retira_simbolos(int n) {
-    for (int i = 0; i < n; i++)
-        remove_topo(&tab_simbolos);
+    for (int i = 0; i < n; i++) {
+        void *remover = remove_topo(&tab_simbolos);
+        free(remover);
+    }
+}
+
+void remove_nivel_lexico(int nL) {
+    if(tab_simbolos == NULL) 
+        return;
+    pilha_t *iter = tab_simbolos;
+    while (iter != NULL) {
+        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
+        if (simbolo_atual->nivel < nL)
+            return;
+
+        iter = iter->prox;
+        void *remover = remove_topo(&tab_simbolos);
+        free(remover);
+    }
 }
 
 entrada_tabela_simbolos *busca(char *identificador) {
@@ -47,6 +68,18 @@ entrada_tabela_simbolos *busca(char *identificador) {
         entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
         if (strcmp(identificador, simbolo_atual->id) == 0)
             return simbolo_atual;
+        iter = iter->prox;
+    }
+    return NULL;
+}
+
+entrada_tabela_simbolos **obter_ultimo_simbolo_categoria(categoria_simbolo cat) {
+    pilha_t *iter = tab_simbolos;
+    while (iter != NULL) {
+        entrada_tabela_simbolos *item = (entrada_tabela_simbolos *) iter->dado;
+        if (item->cat == cat) {
+            return (entrada_tabela_simbolos **) &(iter->dado);
+        }
         iter = iter->prox;
     }
     return NULL;
@@ -62,72 +95,6 @@ void atualiza_tipo(tipo t, int n) {
         iter = iter->prox;
         i++;
     }
-}
-
-void atualiza_tipo_funcao(tipo t) {
-    pilha_t *iter = tab_simbolos;
-    entrada_tabela_simbolos *simb;
-    while (iter != NULL) {
-        simb = (entrada_tabela_simbolos *)iter->dado;
-        if (simb->cat == funcao)
-            break;
-        else {
-            iter = iter->prox;
-        }
-    }
-
-    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
-    atr_func->tipo_funcao = t;
-}
-
-
-void remove_nivel_lexico(int nL) {
-    if(tab_simbolos == NULL) 
-        return;
-    pilha_t *iter = tab_simbolos;
-    while (iter != NULL) {
-        entrada_tabela_simbolos *simbolo_atual = (entrada_tabela_simbolos *) iter->dado;
-        if (simbolo_atual->nivel < nL)
-            return;
-
-        iter = iter->prox;
-        remove_topo(&tab_simbolos);
-    }
-}
-
-entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos) {
-    entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
-    novo_simb->cat = cat;
-    novo_simb->nivel = nivel_lex;
-    strncpy(novo_simb->id, id, TAM_TOKEN);
-    novo_simb->atributos = atributos;
-    return novo_simb;
-}
-
-atributos_var_simples *cria_atributos_var_simples(tipo tipo_var, int deslocamento) {
-    atributos_var_simples *novo_atr = (atributos_var_simples *)malloc(sizeof(atributos_var_simples));
-    novo_atr->deslocamento = deslocamento;
-    novo_atr->tipo_var = tipo_var;
-    return novo_atr;
-}
-
-atributos_procedimento *cria_atributos_procedimento(char *rotulo) {
-    atributos_procedimento *novo_atr = (atributos_procedimento *)malloc(sizeof(atributos_procedimento));
-    strncpy(novo_atr->rotulo, rotulo, 10);
-    return novo_atr;
-}
-
-atributos_funcao *cria_atributos_funcao(char *rotulo) {
-    atributos_funcao *novo_atr = (atributos_funcao *)malloc(sizeof(atributos_funcao));
-    strncpy(novo_atr->rotulo, rotulo, 10);
-    return novo_atr;
-}
-
-atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass) {
-    atributos_param_formal *novo_atr = (atributos_param_formal *)malloc(sizeof(atributos_param_formal));
-    novo_atr->tipo_param = tipo_param;
-    novo_atr->pass = pass;
-    return novo_atr;
 }
 
 void atualiza_tipo_param(tipo t, int n) {
@@ -240,6 +207,58 @@ void trata_parametros(int deslocamento) {
     }
 }
 
+void atualiza_tipo_funcao(tipo t) {
+    pilha_t *iter = tab_simbolos;
+    entrada_tabela_simbolos *simb;
+    while (iter != NULL) {
+        simb = (entrada_tabela_simbolos *)iter->dado;
+        if (simb->cat == funcao)
+            break;
+        else {
+            iter = iter->prox;
+        }
+    }
+
+    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+    atr_func->tipo_funcao = t;
+}
+
+entrada_tabela_simbolos *cria_simbolo(categoria_simbolo cat, char *id, void *atributos) {
+    entrada_tabela_simbolos *novo_simb = (entrada_tabela_simbolos *)malloc(sizeof(entrada_tabela_simbolos));
+    novo_simb->cat = cat;
+    novo_simb->nivel = nivel_lex;
+    strncpy(novo_simb->id, id, TAM_TOKEN);
+    novo_simb->atributos = atributos;
+    return novo_simb;
+}
+
+atributos_var_simples *cria_atributos_var_simples(tipo tipo_var, int deslocamento) {
+    atributos_var_simples *novo_atr = (atributos_var_simples *)malloc(sizeof(atributos_var_simples));
+    novo_atr->deslocamento = deslocamento;
+    novo_atr->tipo_var = tipo_var;
+    return novo_atr;
+}
+
+atributos_procedimento *cria_atributos_procedimento(char *rotulo) {
+    atributos_procedimento *novo_atr = (atributos_procedimento *)malloc(sizeof(atributos_procedimento));
+    strncpy(novo_atr->rotulo, rotulo, 10);
+    return novo_atr;
+}
+
+atributos_funcao *cria_atributos_funcao(char *rotulo) {
+    atributos_funcao *novo_atr = (atributos_funcao *)malloc(sizeof(atributos_funcao));
+    strncpy(novo_atr->rotulo, rotulo, 10);
+    return novo_atr;
+}
+
+atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passagem pass) {
+    atributos_param_formal *novo_atr = (atributos_param_formal *)malloc(sizeof(atributos_param_formal));
+    novo_atr->tipo_param = tipo_param;
+    novo_atr->pass = pass;
+    return novo_atr;
+}
+
+// Imprime os dados de um símbolo de acordo com sua categoria
 void imprime_simbolo(void *simbolo) {
     entrada_tabela_simbolos *simb = (entrada_tabela_simbolos *)simbolo;
     printf("###########\n");
@@ -281,18 +300,6 @@ void imprime_simbolo(void *simbolo) {
     }
     printf("# Identificador: %s\n", (char *)simb->id);
     printf("###########\n");
-}
-
-entrada_tabela_simbolos **obter_ultimo_simbolo_categoria(categoria_simbolo cat) {
-    pilha_t *iter = tab_simbolos;
-    while (iter != NULL) {
-        entrada_tabela_simbolos *item = (entrada_tabela_simbolos *) iter->dado;
-        if (item->cat == cat) {
-            return (entrada_tabela_simbolos **) &(iter->dado);
-        }
-        iter = iter->prox;
-    }
-    return NULL;
 }
 
 void imprime_tabela_simbolos() {

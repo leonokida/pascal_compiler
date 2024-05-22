@@ -109,31 +109,6 @@ void leitura(char *token) {
 
 }
 
-void checa_parametro_passagem() {
-    if (procedimento_atual == NULL)
-        return;
-
-    atributos_param_formal *atr_param_esperado;
-    if (procedimento_atual->cat == funcao) {
-        atributos_funcao *atr_func = (atributos_funcao *)procedimento_atual->atributos;
-        entrada_tabela_simbolos * param_esperado = atr_func->params[num_params-1];
-        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
-    }
-    else if (procedimento_atual->cat == procedimento) {
-        atributos_procedimento *atr_proc = (atributos_procedimento *)procedimento_atual->atributos;
-        entrada_tabela_simbolos * param_esperado = atr_proc->params[num_params-1];
-        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
-    }
-    else {
-        sprintf(mensagem_erro, "%s não é procedimento nem função", procedimento_atual->id);
-        imprimeErro(mensagem_erro);
-    }
-
-    if (atr_param_esperado->pass == pass_referencia) {
-        imprimeErro("Parâmetro inválido para passagem por referência");
-    }
-}
-
 void gera_carrega_valor(entrada_tabela_simbolos *simb) {
     switch (simb->cat) {
         case var_simples:
@@ -300,6 +275,30 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
     }
 }
 
+void checa_parametro_passagem() {
+    if (procedimento_atual == NULL)
+        return;
+
+    atributos_param_formal *atr_param_esperado;
+    if (procedimento_atual->cat == funcao) {
+        atributos_funcao *atr_func = (atributos_funcao *)procedimento_atual->atributos;
+        entrada_tabela_simbolos * param_esperado = atr_func->params[num_params-1];
+        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
+    }
+    else if (procedimento_atual->cat == procedimento) {
+        atributos_procedimento *atr_proc = (atributos_procedimento *)procedimento_atual->atributos;
+        entrada_tabela_simbolos * param_esperado = atr_proc->params[num_params-1];
+        atr_param_esperado = (atributos_param_formal*)param_esperado->atributos;
+    }
+    else {
+        sprintf(mensagem_erro, "%s não é procedimento nem função", procedimento_atual->id);
+        imprimeErro(mensagem_erro);
+    }
+
+    if (atr_param_esperado->pass == pass_referencia) {
+        imprimeErro("Parâmetro inválido para passagem por referência");
+    }
+}
 
 void imprime_operacoes(void *op) {
     printf("ELEM: ");

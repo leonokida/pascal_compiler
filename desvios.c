@@ -1,4 +1,5 @@
 #include "desvios.h"
+#include "compilador.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,8 +18,7 @@ char *pega_rotulo(pilha_t *pilha, int posicao)
     // Verifica se a pilha está vazia
     if (aux == NULL)
     {
-        printf("Pilha vazia!\n");
-        exit(1);
+        imprimeErro("Erro ao processar rótulos");
     }
 
     // Navega até a posição desejada
@@ -30,8 +30,7 @@ char *pega_rotulo(pilha_t *pilha, int posicao)
     // Verifica se a posição é válida
     if (aux == NULL)
     {
-        printf("Posição inválida!\n");
-        exit(1);
+        imprimeErro("Erro ao processar rótulos");
     }
 
     // Retorna o rótulo na posição desejada

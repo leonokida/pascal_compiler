@@ -66,6 +66,14 @@ programa    :
    ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
    bloco PONTO 
    {
+      destroi_pilha(&tab_simbolos);
+      destroi_pilha(&num_vars_pilha);
+      destroi_pilha(&pilha_rotulos);
+      destroi_pilha(&expressoes_pilha);
+      destroi_pilha(&termos_pilha);
+      destroi_pilha(&fatores_pilha);
+      destroi_pilha(&operacoes_pilha);
+      destroi_pilha(&ident_comando_pilha);
       geraCodigo (NULL, "PARA");
    }
 ;
@@ -85,18 +93,20 @@ bloco       :
 
       sprintf(comando, "DSVS %s", rotulo_main);
       geraCodigo(NULL, comando);
+      free(rotulo_main);
    }
    parte_declara_subrotinas
    {
       char *rotulo = pega_rotulo(pilha_rotulos, 0);
       geraCodigo(rotulo, "NADA");
-      remove_topo(&pilha_rotulos);
+      void *remover = remove_topo(&pilha_rotulos);
+      free(remover);
    }
    comando_composto
    {
-      int *temp = remove_topo(&num_vars_pilha);
-      num_vars_bloco = (*temp);
-      free(temp);
+      int *remover = remove_topo(&num_vars_pilha);
+      num_vars_bloco = (*remover);
+      free(remover);
 
       remove_nivel_lexico(nivel_lex+1);
 
@@ -291,7 +301,8 @@ finaliza_procedimento: {
       geraCodigo(NULL, comando);
       retira_simbolos(atr_proc->num_params);
       nivel_lex--;
-      remove_topo(&pilha_rotulos);
+      void *remover = remove_topo(&pilha_rotulos);
+      free(remover);
    }
 ;
 
@@ -308,7 +319,8 @@ finaliza_funcao: {
       geraCodigo(NULL, comando);
       retira_simbolos(atr_func->num_params);
       nivel_lex--;
-      remove_topo(&pilha_rotulos);
+      void *remover = remove_topo(&pilha_rotulos);
+      free(remover);
    }
 ;
 
@@ -335,6 +347,9 @@ expressao: expressao_simples
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
+
+      free(t1);
+      free(t2);
    }
 ;
 
@@ -353,6 +368,9 @@ expressao_simples: expressao_simples sinal_ou_or termo
       operacoes *op = (operacoes *)remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
+
+      free(t1);
+      free(t2);
    }
    | sinal { checa_parametro_passagem(); } termo
    {
@@ -365,11 +383,14 @@ expressao_simples: expressao_simples sinal_ou_or termo
          sprintf(comando, "INVR");
          geraCodigo(NULL, comando);
       }
+
+      free(t1);
    }
    | termo
    {
       tipo *t1 = (tipo *)remove_topo(&termos_pilha);
       insere_topo(&expressoes_pilha, t1, sizeof(tipo));
+      free(t1);
    }
 ;
 
@@ -399,6 +420,7 @@ termo: fator
    {
       tipo *t1 = (tipo *)remove_topo(&fatores_pilha);
       insere_topo(&termos_pilha, t1, sizeof(tipo));
+      free(t1);
    }
    | termo operacao_termo fator
    {
@@ -413,6 +435,10 @@ termo: fator
       operacoes *op = remove_topo(&operacoes_pilha);
       sprintf(comando, "%s", gera_operacao_mepa(*op));
       geraCodigo(NULL, comando);
+
+      free(op);
+      free(t1);
+      free(t2);
    }
 ;
 
@@ -480,6 +506,8 @@ fator: IDENT
    {
       tipo *t = (tipo *)remove_topo(&expressoes_pilha);
       insere_topo(&fatores_pilha, t, sizeof(tipo));
+
+      free(t);
    }
    | NOT fator
 ;
@@ -529,6 +557,8 @@ chamada_de_funcao: ABRE_PARENTESES {
          if (*t != atr_func->tipo_funcao) {
             imprimeErro("Tipos incompatíveis na chamada da função");
          }
+
+         free(t);
       }
 
       sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
@@ -649,6 +679,7 @@ atribuicao: ATRIBUICAO
       }
 
       geraCodigo(NULL, comando);
+      free(t);
       ident_comando = NULL;
    }
 ;
@@ -688,6 +719,8 @@ chamada_de_procedimento: {
          if (*t != atr_param->tipo_param) {
             imprimeErro("Tipos incompatíveis na chamada do procedimento");
          }
+
+         free(t);
       }
 
       sprintf(comando, "CHPR %s, %d", atr_proc->rotulo, nivel_lex);
@@ -708,6 +741,10 @@ comando_repetitivo:
 
 		insere_topo(&pilha_rotulos, WhileInicio, 10*sizeof(char)); // 1
 		insere_topo(&pilha_rotulos, WhileFim, 10*sizeof(char)); // 0
+
+      free(WhileInicio);
+      free(WhileFim);
+
 		geraCodigo(pega_rotulo(pilha_rotulos, 1), "NADA");
 	}
 	expressao DO
@@ -726,8 +763,10 @@ comando_repetitivo:
 		sprintf(rot, "%s", pega_rotulo(pilha_rotulos, 0));
 		geraCodigo(rot, "NADA");
 
-		remove_topo(&pilha_rotulos);
-      remove_topo(&pilha_rotulos);
+		void *remover1 = remove_topo(&pilha_rotulos);
+      void *remover2 = remove_topo(&pilha_rotulos);
+      free(remover1);
+      free(remover2);
 	}
 ;
 
@@ -741,11 +780,16 @@ comando_condicional:
 
       insere_topo(&pilha_rotulos, RotElse, 10*sizeof(char)); // 1
       insere_topo(&pilha_rotulos, RotFim, 10*sizeof(char)); // 0
+
+      free(RotElse);
+      free(RotFim);
    }
    bloco_if bloco_else
    {
-      remove_topo(&pilha_rotulos);
-      remove_topo(&pilha_rotulos);
+      void *remover1 = remove_topo(&pilha_rotulos);
+      void *remover2 = remove_topo(&pilha_rotulos);
+      free(remover1);
+      free(remover2);
    }
 ;
 
@@ -761,6 +805,7 @@ bloco_if: IF expressao
       // Gera DSVF com rotulo
       sprintf(comando, "DSVF %s", pega_rotulo(pilha_rotulos, 1));
       geraCodigo(NULL, comando);
+      free(t);
    }
    THEN comando_sem_rotulo
 ;

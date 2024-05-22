@@ -46,7 +46,7 @@ int insere_topo(pilha_t **pilha, void *elem, size_t tamanho) {
     // Pilha não existe
     if (pilha == NULL) {
         printf("Pilha não existe.\n");
-        return -2;
+        return 0;
     }
 
     // Cria novo elemento da pilha, contendo o dado de qualquer tipo
@@ -89,27 +89,6 @@ void *remove_topo(pilha_t **pilha) {
 void destroi_pilha(pilha_t **pilha) {
     while (tamanho_pilha(*pilha) > 0) {
         void *remover = remove_topo(pilha);
+        free(remover);
     }
-}
-
-void **obter_item_pilha(pilha_t **pilha, int pos) {
-    // Verifica se a pilha está vazia ou a posição é inválida
-    if (pilha == NULL || pos < 0) {
-        return NULL;
-    }
-
-    pilha_t *atual = *pilha;
-    int contador = 0;
-
-    // Percorre a pilha até a posição desejada
-    while (atual != NULL) {
-        if (contador == pos) {
-            return &(atual->dado);
-        }
-        atual = atual->prox;
-        contador++;
-    }
-
-    // Se a posição é maior que o tamanho da pilha, retorna NULL
-    return NULL;
 }

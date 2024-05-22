@@ -261,26 +261,31 @@ atributos_param_formal *cria_atributos_param_formal(tipo tipo_param, tipo_passag
 // Imprime os dados de um símbolo de acordo com sua categoria
 void imprime_simbolo(void *simbolo) {
     entrada_tabela_simbolos *simb = (entrada_tabela_simbolos *)simbolo;
+
+    atributos_var_simples *atr_var;
+    atributos_procedimento *atr_proc;
+    atributos_funcao *atr_func;
+    atributos_param_formal *atr_param;
+
     printf("###########\n");
-    switch (simb->cat)
-    {
+    switch (simb->cat) {
     case var_simples:
         printf("# Variável simples\n");
-        atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;
+        atr_var = (atributos_var_simples *)simb->atributos;
         printf("# Tipo: %d\n", atr_var->tipo_var);
         printf("# N.L.: %d\n", simb->nivel);
         printf("# Desloc: %d\n", atr_var->deslocamento);
         break;
     case procedimento:
         printf("# Procedimento\n");
-        atributos_procedimento *atr_proc = (atributos_procedimento *)simb->atributos;
+        atr_proc = (atributos_procedimento *)simb->atributos;
         printf("# Número de parâmetros: %d\n", atr_proc->num_params);
         printf("# Rótulo: %s\n", atr_proc->rotulo);
         printf("# N.L.: %d\n", simb->nivel);
         break;
     case funcao:
         printf("# Função\n");
-        atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+        atr_func = (atributos_funcao *)simb->atributos;
         printf("# Tipo: %d\n", atr_func->tipo_funcao);
         printf("# Rótulo: %s\n", atr_func->rotulo);
         printf("# N.L.: %d\n", simb->nivel);
@@ -288,7 +293,7 @@ void imprime_simbolo(void *simbolo) {
         break;
     case param_formal:
         printf("# Parâmetro formal\n");
-        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+        atr_param = (atributos_param_formal *)simb->atributos;
         printf("# Tipo: %d\n", atr_param->tipo_param);
         printf("# Tipo de passagem: %d\n", atr_param->pass);
         printf("# N.L.: %d\n", simb->nivel);

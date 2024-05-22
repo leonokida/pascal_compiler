@@ -465,21 +465,29 @@ fator: IDENT
          imprimeErro(mensagem_erro);
       }
 
+      atributos_var_simples *atr_var;
+      atributos_funcao *atr_func;
+      atributos_param_formal *atr_param;
+
       switch(simb->cat) {
          case var_simples:
-            atributos_var_simples *atr_var = (atributos_var_simples *)simb->atributos;
+            atr_var = (atributos_var_simples *)simb->atributos;
             t = atr_var->tipo_var;
             break;
 
          case funcao:
-            atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+            atr_func = (atributos_funcao *)simb->atributos;
             t = atr_func->tipo_funcao;
             break;
 
          case param_formal:
-            atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+            atr_param = (atributos_param_formal *)simb->atributos;
             t = atr_param->tipo_param;
             break; 
+
+         default:
+            imprimeErro("Procedimento não pode ser utilizado como fator em expressões");
+            break;
       }
 
       strncpy(ident, token, strlen(token));
@@ -637,9 +645,13 @@ atribuicao: ATRIBUICAO
       ident_comando = remove_topo(&ident_comando_pilha);
       tipo *t = remove_topo(&expressoes_pilha);
 
+      atributos_var_simples *atr_var;
+      atributos_param_formal *atr_param;
+      atributos_funcao *atr_func;
+
       switch(ident_comando->cat) {
          case var_simples:
-            atributos_var_simples *atr_var = (atributos_var_simples *)ident_comando->atributos;
+            atr_var = (atributos_var_simples *)ident_comando->atributos;
             if (atr_var->tipo_var != *t)
                imprimeErro("Atribuição de valor que não é do tipo da variável");
             
@@ -647,7 +659,7 @@ atribuicao: ATRIBUICAO
             break;
 
          case param_formal:
-            atributos_param_formal *atr_param = (atributos_param_formal *)ident_comando->atributos;
+            atr_param = (atributos_param_formal *)ident_comando->atributos;
             if (atr_param->tipo_param != *t)
                imprimeErro("Atribuição de valor que não é do tipo da variável");
 
@@ -660,7 +672,7 @@ atribuicao: ATRIBUICAO
             break;
 
          case funcao:
-            atributos_funcao *atr_func = (atributos_funcao *)ident_comando->atributos;
+            atr_func = (atributos_funcao *)ident_comando->atributos;
             if (atr_func->tipo_funcao != *t)
                imprimeErro("Atribuição de valor que não é do tipo da variável");
 

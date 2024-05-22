@@ -87,16 +87,17 @@ void leitura(char *token) {
     }
 
     geraCodigo(NULL, "LEIT");
+    atributos_var_simples *atr_var;
+    atributos_param_formal *atr_param;
 
-    switch (simbolo->cat)
-    {
+    switch (simbolo->cat) {
     case var_simples:
-        atributos_var_simples *atr_var = (atributos_var_simples *)simbolo->atributos;
+        atr_var = (atributos_var_simples *)simbolo->atributos;
         sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_var->deslocamento);
         break;
     
     case param_formal:
-        atributos_param_formal *atr_param = (atributos_param_formal *)simbolo->atributos;
+        atr_param = (atributos_param_formal *)simbolo->atributos;
         sprintf(comando, "ARMZ %d, %d", simbolo->nivel, atr_param->deslocamento);
         break;
 
@@ -110,14 +111,17 @@ void leitura(char *token) {
 }
 
 void gera_carrega_valor(entrada_tabela_simbolos *simb) {
+    atributos_var_simples *atr_var;
+    atributos_param_formal *atr_param;
+
     switch (simb->cat) {
         case var_simples:
-            atributos_var_simples *atr_var = simb->atributos;
+            atr_var = simb->atributos;
             sprintf(comando, "CRVL %d, %d", simb->nivel, atr_var->deslocamento);
             break;
 
         case param_formal:
-            atributos_param_formal *atr_param = simb->atributos;
+            atr_param = simb->atributos;
             sprintf(comando, "CRVL %d, %d", simb->nivel, atr_param->deslocamento);
             break;
 
@@ -129,14 +133,17 @@ void gera_carrega_valor(entrada_tabela_simbolos *simb) {
 }
 
 void gera_carrega_endereco(entrada_tabela_simbolos *simb) {
+    atributos_var_simples *atr_var;
+    atributos_param_formal *atr_param;
+
     switch (simb->cat) {
         case var_simples:
-            atributos_var_simples *atr_var = simb->atributos;
+            atr_var = simb->atributos;
             sprintf(comando, "CREN %d, %d", simb->nivel, atr_var->deslocamento);
             break;
 
         case param_formal:
-            atributos_param_formal *atr_param = simb->atributos;
+            atr_param = simb->atributos;
             sprintf(comando, "CREN %d, %d", simb->nivel, atr_param->deslocamento);
             break;
 
@@ -162,6 +169,10 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
             }
             atributos_param_formal *atr_param_esperado = (atributos_param_formal *)atr_func_atual->params[num_params - 1]->atributos;
             tipo_passagem pass_atr = atr_param_esperado->pass;
+
+            atributos_param_formal *atr_param;
+            atributos_funcao *atr_func;
+
             switch(simb->cat) {
                 case var_simples:
                     if (pass_atr == pass_referencia) {
@@ -174,7 +185,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
                 
                 case param_formal:
                     if (pass_atr == pass_referencia) {
-                        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+                        atr_param = (atributos_param_formal *)simb->atributos;
                         if (atr_param->pass == pass_referencia) {
                             gera_carrega_valor(simb);
                         }
@@ -188,7 +199,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
                     break;
                 
                 case funcao:
-                    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+                    atr_func = (atributos_funcao *)simb->atributos;
                     geraCodigo(NULL, "AMEM 1");
                     sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
                     geraCodigo(NULL, comando);
@@ -207,6 +218,10 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
             }
             atributos_param_formal *atr_param_esperado = (atributos_param_formal *)atr_proc_atual->params[num_params - 1]->atributos;
             tipo_passagem pass_atr = atr_param_esperado->pass;
+
+            atributos_param_formal *atr_param;
+            atributos_funcao *atr_func;
+
             switch(simb->cat) {
                 case var_simples:
                     if (pass_atr == pass_referencia) {
@@ -219,7 +234,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
                 
                 case param_formal:
                     if (pass_atr == pass_referencia) {
-                        atributos_param_formal *atr_param = (atributos_param_formal *)simb->atributos;
+                        atr_param = (atributos_param_formal *)simb->atributos;
                         if (atr_param->pass == pass_referencia) {
                             gera_carrega_valor(simb);
                         }
@@ -233,7 +248,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
                     break;
                 
                 case funcao:
-                    atributos_funcao *atr_func = (atributos_funcao *)simb->atributos;
+                    atr_func = (atributos_funcao *)simb->atributos;
                     geraCodigo(NULL, "AMEM 1");
                     sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
                     geraCodigo(NULL, comando);
@@ -247,13 +262,16 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
         }
     }
     else {
+        atributos_param_formal *atr_param;
+        atributos_funcao *atr_func;
+
         switch (simb->cat) {
             case var_simples:
                 gera_carrega_valor(simb);
                 break;
 
             case param_formal:
-                atributos_param_formal *atr_param = simb->atributos;
+                atr_param = simb->atributos;
                 if (atr_param->pass == pass_referencia)
                     gera_carrega_valor_indireto(simb);
                 else
@@ -261,7 +279,7 @@ void gera_carregamento(entrada_tabela_simbolos *simb) {
                 break;
 
             case funcao:
-                atributos_funcao *atr_func = simb->atributos;
+                atr_func = simb->atributos;
                 geraCodigo(NULL, "AMEM 1");
                 sprintf(comando, "CHPR %s, %d", atr_func->rotulo, nivel_lex);
                 geraCodigo(NULL, comando);
